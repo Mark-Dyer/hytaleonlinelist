@@ -1,0 +1,96 @@
+spring:
+  application:
+    name: hytale-online-list
+
+  # Jackson 3 configuration
+  jackson:
+    property-naming-strategy: LOWER_CAMEL_CASE
+    default-property-inclusion: always
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/hytale_online_list
+    username: postgres
+    password:
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    # Required to run SQL init AFTER Flyway migrations
+    defer-datasource-initialization: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          time_zone: UTC
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    # Clean and re-run migrations on startup (use with caution!)
+    # Set to true to reset database schema on every restart
+    clean-disabled: ${FLYWAY_CLEAN_DISABLED:true}
+
+  # SQL Data Initialization (runs AFTER Flyway due to defer-datasource-initialization)
+  # Set mode to 'always' to seed data on startup, 'never' to disable
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:db/seed-data.sql
+      continue-on-error: true
+
+  # Email configuration
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  # OAuth2 is disabled by default - enable by adding 'oauth' profile
+  # Run with: --spring.profiles.active=local,oauth
+
+# JWT configuration
+jwt:
+  secret: ${JWT_SECRET:your-256-bit-secret-key-change-in-production-must-be-at-least-32-chars}
+  access-token-expiration: 900000
+  refresh-token-expiration: 604800000
+
+# Application configuration
+app:
+  frontend-url: ${FRONTEND_URL:http://localhost:3000}
+  cookie-domain: ${COOKIE_DOMAIN:localhost}
+  cookie-secure: ${COOKIE_SECURE:false}
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+# Cloudflare R2 Storage (disabled by default)
+# Enable by setting cloudflare.r2.enabled=true and providing credentials
+cloudflare:
+  r2:
+    enabled: ${R2_ENABLED:false}
+    account-id: ${R2_ACCOUNT_ID:}
+    access-key-id: ${R2_ACCESS_KEY_ID:}
+    secret-access-key: ${R2_SECRET_ACCESS_KEY:}
+    bucket-name: ${R2_BUCKET_NAME:hytale-online-list}
+    public-url: ${R2_PUBLIC_URL:}
+
+logging:
+  level:
+    root: INFO
+    com.hytaleonlinelist: INFO

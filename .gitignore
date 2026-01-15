@@ -1,0 +1,53 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.iml
+*.iws
+.vscode/
+*.swp
+*.swo
+
+# Claude Code
+.claude/
+
+# Serena
+.serena/
+
+# Playwright MCP
+.playwright-mcp/
+
+# Java / Maven
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+hs_err_pid*
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Node.js (for frontend)
+node_modules/
+.npm/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Next.js
+.next/
+out/
+.vercel/
+
+# Build outputs
+build/
+dist/
+
+# Test coverage
+coverage/
