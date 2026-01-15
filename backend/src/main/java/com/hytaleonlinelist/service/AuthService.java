@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 @Service
@@ -181,6 +182,44 @@ public class AuthService {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         return toAuthResponse(user);
+    }
+
+
+    @Transactional
+    public void forgotPassword(String email) {
+        // Always return success to prevent email enumeration
+        userRepository.findByEmail(email).ifPresent(user -> {
+            // Don't send reset email for OAuth-only users
+            if (user.getPasswordHash() == null && user.getOauthProvider() != null) {
+                return;
+            }
+
+            String token = UUID.randomUUID().toString();
+            user.setPasswordResetToken(token);
+            user.setPasswordResetTokenExpiry(Instant.now().plus(1, ChronoUnit.HOURS));
+            userRepository.save(user);
+
+            emailService.sendPasswordResetEmail(user.getEmail(), token);
+        });
+    }
+
+    @Transactional
+    public void resetPassword(String token, String newPassword) {
+        UserEntity user = userRepository.findByPasswordResetToken(token)
+                .orElseThrow(() -> new BadRequestException("Invalid or expired reset token"));
+
+        if (user.getPasswordResetTokenExpiry() == null ||
+            user.getPasswordResetTokenExpiry().isBefore(Instant.now())) {
+            throw new BadRequestException("Reset token has expired");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setPasswordResetToken(null);
+        user.setPasswordResetTokenExpiry(null);
+        userRepository.save(user);
+
+        // Invalidate all refresh tokens for security
+        refreshTokenRepository.deleteByUserId(user.getId());
     }
 
     private void setAuthCookies(UserEntity user, HttpServletResponse response) {

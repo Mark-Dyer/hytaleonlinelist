@@ -1,7 +1,9 @@
 package com.hytaleonlinelist.controller;
 
+import com.hytaleonlinelist.dto.request.ForgotPasswordRequest;
 import com.hytaleonlinelist.dto.request.LoginRequest;
 import com.hytaleonlinelist.dto.request.RegisterRequest;
+import com.hytaleonlinelist.dto.request.ResetPasswordRequest;
 import com.hytaleonlinelist.dto.response.AuthResponse;
 import com.hytaleonlinelist.dto.response.MessageResponse;
 import com.hytaleonlinelist.security.UserPrincipal;
@@ -89,6 +91,21 @@ public class AuthController {
         }
         authService.resendVerificationEmail(principal.id());
         return ResponseEntity.ok(new MessageResponse("Verification email sent"));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<MessageResponse> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request.email());
+        // Always return success to prevent email enumeration
+        return ResponseEntity.ok(new MessageResponse("If an account exists with that email, a password reset link has been sent"));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<MessageResponse> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request.token(), request.password());
+        return ResponseEntity.ok(new MessageResponse("Password reset successfully"));
     }
 
     private String extractRefreshToken(HttpServletRequest request) {
