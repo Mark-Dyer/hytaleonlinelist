@@ -7,6 +7,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -29,4 +33,14 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
 
     @Query("SELECT u FROM UserEntity u WHERE LOWER(u.email) = LOWER(:email) OR LOWER(u.username) = LOWER(:username)")
     Optional<UserEntity> findByEmailOrUsernameIgnoreCase(@Param("email") String email, @Param("username") String username);
+
+    // Admin methods
+    @Query("SELECT u FROM UserEntity u WHERE " +
+           "(:search IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+           "ORDER BY u.createdAt DESC")
+    Page<UserEntity> findAllWithSearch(@Param("search") String search, Pageable pageable);
+
+    @Query("SELECT COUNT(u) FROM UserEntity u WHERE u.createdAt >= :since")
+    long countUsersCreatedSince(@Param("since") Instant since);
 }

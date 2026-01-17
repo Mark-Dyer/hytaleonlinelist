@@ -25,7 +25,12 @@ public interface ServerMapper {
     @Mapping(target = "isOnline", source = "isOnline")
     @Mapping(target = "isFeatured", source = "isFeatured")
     @Mapping(target = "isVerified", source = "isVerified")
+    @Mapping(target = "averageRating", expression = "java(mapAverageRating(entity))")
     ServerResponse toResponse(ServerEntity entity);
+
+    default Double mapAverageRating(ServerEntity entity) {
+        return entity.getAverageRating() != null ? entity.getAverageRating().doubleValue() : null;
+    }
 
     default CategoryResponse mapCategory(ServerEntity entity) {
         if (entity.getCategory() == null) return null;

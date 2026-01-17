@@ -1,6 +1,6 @@
 package com.hytaleonlinelist.dto.response;
 
-public record AuthResponse(
+public record ProfileResponse(
         String id,
         String username,
         String email,

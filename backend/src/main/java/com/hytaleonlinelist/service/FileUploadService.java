@@ -28,6 +28,7 @@ public class FileUploadService {
 
     private static final long MAX_ICON_SIZE = 2 * 1024 * 1024; // 2MB
     private static final long MAX_BANNER_SIZE = 5 * 1024 * 1024; // 5MB
+    private static final long MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2MB
 
     private final S3Client s3Client;
     private final R2Properties r2Properties;
@@ -46,6 +47,12 @@ public class FileUploadService {
     public UploadResponse uploadBanner(MultipartFile file, UUID userId) throws IOException {
         validateImageFile(file, MAX_BANNER_SIZE);
         String key = generateKey("banners", userId, file);
+        return uploadFile(file, key);
+    }
+
+    public UploadResponse uploadAvatar(MultipartFile file, UUID userId) throws IOException {
+        validateImageFile(file, MAX_AVATAR_SIZE);
+        String key = generateKey("avatars", userId, file);
         return uploadFile(file, key);
     }
 

@@ -1,6 +1,8 @@
 package com.hytaleonlinelist.domain.repository;
 
 import com.hytaleonlinelist.domain.entity.VoteEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,4 +24,7 @@ public interface VoteRepository extends JpaRepository<VoteEntity, UUID> {
     boolean existsByServerIdAndUserIdAndVoteDate(UUID serverId, UUID userId, LocalDate voteDate);
 
     long countByServerId(UUID serverId);
+
+    @Query("SELECT v FROM VoteEntity v JOIN FETCH v.server WHERE v.user.id = :userId ORDER BY v.votedAt DESC")
+    Page<VoteEntity> findByUserIdWithServer(@Param("userId") UUID userId, Pageable pageable);
 }

@@ -26,6 +26,8 @@ import java.util.List;
  *   maxPlayers: number;
  *   uptimePercentage: number;
  *   voteCount: number;
+ *   reviewCount: number;
+ *   averageRating: number | null;
  *   viewCount: number;
  *   isFeatured: boolean;
  *   isVerified: boolean;
@@ -54,6 +56,8 @@ public record ServerResponse(
     int maxPlayers,
     double uptimePercentage,
     int voteCount,
+    int reviewCount,
+    Double averageRating,
     long viewCount,
     boolean isFeatured,
     boolean isVerified,

@@ -15,6 +15,7 @@ public record UserPrincipal(
         String username,
         String password,
         boolean emailVerified,
+        boolean banned,
         Collection<? extends GrantedAuthority> authorities
 ) implements UserDetails {
 
@@ -29,6 +30,7 @@ public record UserPrincipal(
                 user.getUsername(),
                 user.getPasswordHash(),
                 user.isEmailVerified(),
+                user.isBanned(),
                 authorities
         );
     }
@@ -55,7 +57,7 @@ public record UserPrincipal(
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return !banned;
     }
 
     @Override

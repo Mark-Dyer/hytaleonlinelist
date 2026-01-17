@@ -36,9 +36,17 @@ public class ReviewEntity {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
+
     @PrePersist
     protected void onCreate() {
-        createdAt = Instant.now();
+        createdAt = updatedAt = Instant.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = Instant.now();
     }
 
     // Getters and Setters
@@ -88,5 +96,13 @@ public class ReviewEntity {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Instant updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

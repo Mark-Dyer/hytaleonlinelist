@@ -7,10 +7,12 @@ package com.hytaleonlinelist.dto.response;
  * interface Review {
  *   id: string;
  *   serverId: string;
- *   user: User;
+ *   user: { id: string; username: string; avatarUrl: string | null };
  *   rating: number;
  *   content: string;
  *   createdAt: string;
+ *   updatedAt: string;
+ *   isOwner: boolean;
  * }
  */
 public record ReviewResponse(
@@ -19,5 +21,7 @@ public record ReviewResponse(
     UserResponse user,
     int rating,
     String content,
-    String createdAt
+    String createdAt,
+    String updatedAt,
+    boolean isOwner
 ) {}

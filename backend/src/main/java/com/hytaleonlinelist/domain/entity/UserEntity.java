@@ -25,6 +25,9 @@ public class UserEntity {
     @Column(name = "avatar_url", length = 500)
     private String avatarUrl;
 
+    @Column(name = "bio", columnDefinition = "TEXT")
+    private String bio;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false, length = 20)
     private Role role = Role.USER;
@@ -50,6 +53,15 @@ public class UserEntity {
 
     @Column(name = "password_reset_token_expiry")
     private Instant passwordResetTokenExpiry;
+
+    @Column(name = "is_banned", nullable = false)
+    private boolean isBanned = false;
+
+    @Column(name = "banned_at")
+    private Instant bannedAt;
+
+    @Column(name = "banned_reason", columnDefinition = "TEXT")
+    private String bannedReason;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -107,6 +119,14 @@ public class UserEntity {
 
     public void setAvatarUrl(String avatarUrl) {
         this.avatarUrl = avatarUrl;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
     }
 
     public Role getRole() {
@@ -171,6 +191,30 @@ public class UserEntity {
 
     public void setPasswordResetTokenExpiry(Instant passwordResetTokenExpiry) {
         this.passwordResetTokenExpiry = passwordResetTokenExpiry;
+    }
+
+    public boolean isBanned() {
+        return isBanned;
+    }
+
+    public void setBanned(boolean banned) {
+        isBanned = banned;
+    }
+
+    public Instant getBannedAt() {
+        return bannedAt;
+    }
+
+    public void setBannedAt(Instant bannedAt) {
+        this.bannedAt = bannedAt;
+    }
+
+    public String getBannedReason() {
+        return bannedReason;
+    }
+
+    public void setBannedReason(String bannedReason) {
+        this.bannedReason = bannedReason;
     }
 
     public Instant getCreatedAt() {

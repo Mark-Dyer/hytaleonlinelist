@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -69,4 +70,16 @@ public interface ServerRepository extends JpaRepository<ServerEntity, UUID>, Jpa
     boolean existsBySlug(String slug);
 
     List<ServerEntity> findByOwnerId(UUID ownerId);
+
+    // Admin methods
+    @Query("SELECT s FROM ServerEntity s LEFT JOIN FETCH s.owner WHERE " +
+           "(:search IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(s.owner.username) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+           "ORDER BY s.createdAt DESC")
+    Page<ServerEntity> findAllWithSearchForAdmin(@Param("search") String search, Pageable pageable);
+
+    @Query("SELECT COUNT(s) FROM ServerEntity s WHERE s.createdAt >= :since")
+    long countServersCreatedSince(@Param("since") Instant since);
+
+    long countByOwnerId(UUID ownerId);
 }

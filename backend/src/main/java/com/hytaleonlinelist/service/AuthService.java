@@ -254,8 +254,10 @@ public class AuthService {
                 user.getUsername(),
                 user.getEmail(),
                 user.getAvatarUrl(),
+                user.getBio(),
                 user.getRole().name(),
-                user.isEmailVerified()
+                user.isEmailVerified(),
+                user.getCreatedAt().toString()
         );
     }
 }

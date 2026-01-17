@@ -79,6 +79,12 @@ public class ServerEntity {
     @Column(name = "vote_count", nullable = false)
     private Integer voteCount = 0;
 
+    @Column(name = "review_count", nullable = false)
+    private Integer reviewCount = 0;
+
+    @Column(name = "average_rating", precision = 2, scale = 1)
+    private java.math.BigDecimal averageRating;
+
     @Column(name = "view_count", nullable = false)
     private Long viewCount = 0L;
 
@@ -260,6 +266,22 @@ public class ServerEntity {
 
     public void setVoteCount(Integer voteCount) {
         this.voteCount = voteCount;
+    }
+
+    public Integer getReviewCount() {
+        return reviewCount;
+    }
+
+    public void setReviewCount(Integer reviewCount) {
+        this.reviewCount = reviewCount;
+    }
+
+    public java.math.BigDecimal getAverageRating() {
+        return averageRating;
+    }
+
+    public void setAverageRating(java.math.BigDecimal averageRating) {
+        this.averageRating = averageRating;
     }
 
     public Long getViewCount() {

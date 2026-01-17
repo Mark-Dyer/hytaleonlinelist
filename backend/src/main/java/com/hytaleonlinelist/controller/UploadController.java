@@ -42,4 +42,16 @@ public class UploadController {
         UploadResponse response = fileUploadService.uploadBanner(file, principal.id());
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/avatar")
+    public ResponseEntity<UploadResponse> uploadAvatar(
+            @RequestParam("file") MultipartFile file,
+            @AuthenticationPrincipal UserPrincipal principal) throws IOException {
+
+        if (principal == null) {
+            return ResponseEntity.status(401).build();
+        }
+        UploadResponse response = fileUploadService.uploadAvatar(file, principal.id());
+        return ResponseEntity.ok(response);
+    }
 }
