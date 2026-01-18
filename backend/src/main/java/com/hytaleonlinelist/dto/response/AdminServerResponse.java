@@ -11,6 +11,6 @@ public record AdminServerResponse(
     boolean isVerified,
     boolean isOnline,
     int voteCount,
-    int playerCount,
+    Integer playerCount,
     String createdAt
 ) {}

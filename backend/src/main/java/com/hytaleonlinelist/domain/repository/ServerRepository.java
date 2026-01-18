@@ -82,4 +82,11 @@ public interface ServerRepository extends JpaRepository<ServerEntity, UUID>, Jpa
     long countServersCreatedSince(@Param("since") Instant since);
 
     long countByOwnerId(UUID ownerId);
+
+    /**
+     * Get servers that need pinging (staggered batch processing)
+     * Orders by last_pinged_at ascending with NULLs first (never pinged servers get priority)
+     */
+    @Query("SELECT s FROM ServerEntity s ORDER BY s.lastPingedAt ASC NULLS FIRST")
+    List<ServerEntity> findServersNeedingPing(Pageable pageable);
 }

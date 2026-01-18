@@ -100,6 +100,13 @@ public class ServerEntity {
     @Column(name = "last_pinged_at")
     private Instant lastPingedAt;
 
+    @Column(name = "preferred_query_protocol", length = 20)
+    @Enumerated(EnumType.STRING)
+    private QueryProtocol preferredQueryProtocol;
+
+    @Column(name = "query_port")
+    private Integer queryPort;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "owner_id", nullable = false)
     private UserEntity owner;
@@ -322,6 +329,22 @@ public class ServerEntity {
 
     public void setLastPingedAt(Instant lastPingedAt) {
         this.lastPingedAt = lastPingedAt;
+    }
+
+    public QueryProtocol getPreferredQueryProtocol() {
+        return preferredQueryProtocol;
+    }
+
+    public void setPreferredQueryProtocol(QueryProtocol preferredQueryProtocol) {
+        this.preferredQueryProtocol = preferredQueryProtocol;
+    }
+
+    public Integer getQueryPort() {
+        return queryPort;
+    }
+
+    public void setQueryPort(Integer queryPort) {
+        this.queryPort = queryPort;
     }
 
     public UserEntity getOwner() {

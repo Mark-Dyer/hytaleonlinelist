@@ -22,8 +22,8 @@ import java.util.List;
  *   tags: string[];
  *   version: string;
  *   isOnline: boolean;
- *   playerCount: number;
- *   maxPlayers: number;
+ *   playerCount: number | null;
+ *   maxPlayers: number | null;
  *   uptimePercentage: number;
  *   voteCount: number;
  *   reviewCount: number;
@@ -52,8 +52,8 @@ public record ServerResponse(
     List<String> tags,
     String version,
     boolean isOnline,
-    int playerCount,
-    int maxPlayers,
+    Integer playerCount,
+    Integer maxPlayers,
     double uptimePercentage,
     int voteCount,
     int reviewCount,
