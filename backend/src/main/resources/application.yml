@@ -86,6 +86,17 @@ app:
   cookie-domain: ${COOKIE_DOMAIN:localhost}
   cookie-secure: ${COOKIE_SECURE:false}
 
+# Postmark email configuration (set postmark.enabled=true to use)
+postmark:
+  enabled: ${POSTMARK_ENABLED:false}
+  api-token: ${POSTMARK_API_TOKEN:}
+  from-email: ${POSTMARK_FROM_EMAIL:noreply@hytaleonlinelist.com}
+  message-stream: ${POSTMARK_MESSAGE_STREAM:outbound}
+  support-email: ${POSTMARK_SUPPORT_EMAIL:support@hytaleonlinelist.com}
+  templates:
+    welcome-verification: ${POSTMARK_TEMPLATE_WELCOME:welcome-verification}
+    password-reset: ${POSTMARK_TEMPLATE_PASSWORD_RESET:password-reset}
+
 server:
   port: 8080
   servlet:

@@ -3,14 +3,20 @@ package com.hytaleonlinelist.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+/**
+ * SMTP-based email service implementation.
+ * This is the fallback when Postmark is not enabled (postmark.enabled=false or not set).
+ */
 @Service
-public class EmailService {
+@ConditionalOnProperty(name = "postmark.enabled", havingValue = "false", matchIfMissing = true)
+public class EmailService implements EmailServiceInterface {
 
     private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
 
@@ -26,8 +32,9 @@ public class EmailService {
         this.mailSender = mailSender;
     }
 
+    @Override
     @Async
-    public void sendVerificationEmail(String to, String token) {
+    public void sendVerificationEmail(String to, String username, String token) {
         String verifyUrl = frontendUrl + "/verify-email?token=" + token;
 
         SimpleMailMessage message = new SimpleMailMessage();
@@ -35,6 +42,7 @@ public class EmailService {
         message.setTo(to);
         message.setSubject("Verify your email - Hytale Online List");
         message.setText(
+                "Hi " + username + ",\n\n" +
                 "Welcome to Hytale Online List!\n\n" +
                 "Please verify your email by clicking the link below:\n\n" +
                 verifyUrl + "\n\n" +
@@ -52,8 +60,9 @@ public class EmailService {
         }
     }
 
+    @Override
     @Async
-    public void sendPasswordResetEmail(String to, String token) {
+    public void sendPasswordResetEmail(String to, String username, String token) {
         String resetUrl = frontendUrl + "/reset-password?token=" + token;
 
         SimpleMailMessage message = new SimpleMailMessage();
@@ -61,6 +70,7 @@ public class EmailService {
         message.setTo(to);
         message.setSubject("Reset your password - Hytale Online List");
         message.setText(
+                "Hi " + username + ",\n\n" +
                 "You requested a password reset.\n\n" +
                 "Click the link below to reset your password:\n\n" +
                 resetUrl + "\n\n" +

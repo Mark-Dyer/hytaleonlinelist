@@ -37,7 +37,7 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
     private final CookieUtils cookieUtils;
-    private final EmailService emailService;
+    private final EmailServiceInterface emailService;
 
     public AuthService(
             UserRepository userRepository,
@@ -46,7 +46,7 @@ public class AuthService {
             JwtTokenProvider jwtTokenProvider,
             AuthenticationManager authenticationManager,
             CookieUtils cookieUtils,
-            EmailService emailService) {
+            EmailServiceInterface emailService) {
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.passwordEncoder = passwordEncoder;
@@ -82,7 +82,7 @@ public class AuthService {
         userRepository.save(user);
 
         // Send verification email
-        emailService.sendVerificationEmail(user.getEmail(), verificationToken);
+        emailService.sendVerificationEmail(user.getEmail(), user.getUsername(), verificationToken);
 
         // Generate tokens and set cookies
         setAuthCookies(user, response);
@@ -174,7 +174,7 @@ public class AuthService {
         user.setEmailVerificationTokenExpiry(Instant.now().plusSeconds(86400)); // 24 hours
         userRepository.save(user);
 
-        emailService.sendVerificationEmail(user.getEmail(), verificationToken);
+        emailService.sendVerificationEmail(user.getEmail(), user.getUsername(), verificationToken);
     }
 
     @Transactional(readOnly = true)
@@ -199,7 +199,7 @@ public class AuthService {
             user.setPasswordResetTokenExpiry(Instant.now().plus(1, ChronoUnit.HOURS));
             userRepository.save(user);
 
-            emailService.sendPasswordResetEmail(user.getEmail(), token);
+            emailService.sendPasswordResetEmail(user.getEmail(), user.getUsername(), token);
         });
     }
 
