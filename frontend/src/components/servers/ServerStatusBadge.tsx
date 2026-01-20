@@ -7,6 +7,7 @@ interface ServerStatusBadgeProps {
   isOnline: boolean;
   lastPingedAt: string | null;
   showLastChecked?: boolean;
+  showLabel?: boolean;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
 }
@@ -15,6 +16,7 @@ export function ServerStatusBadge({
   isOnline,
   lastPingedAt,
   showLastChecked = true,
+  showLabel = true,
   size = 'md',
   className,
 }: ServerStatusBadgeProps) {
@@ -67,6 +69,7 @@ export function ServerStatusBadge({
           sizes.text,
           isOnline ? 'text-green-500' : 'text-red-500'
         )}
+        title={isOnline ? 'Online' : 'Offline'}
       >
         <span
           className={cn(
@@ -75,7 +78,7 @@ export function ServerStatusBadge({
             isOnline ? 'bg-green-500' : 'bg-red-500'
           )}
         />
-        {isOnline ? 'Online' : 'Offline'}
+        {showLabel && (isOnline ? 'Online' : 'Offline')}
       </span>
 
       {/* Last Checked */}

@@ -100,25 +100,31 @@ export function ServerCardCompact({ server }: ServerCardCompactProps) {
   };
 
   return (
-    <Card className="group relative overflow-hidden transition-all duration-300 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5">
-      {/* Banner */}
-      <div className="relative h-16 bg-gradient-to-r from-primary/20 to-accent/20">
-        {server.bannerUrl && (
-          <img
-            src={server.bannerUrl}
-            alt={server.name}
-            className="h-full w-full object-cover"
-          />
-        )}
-        {server.isFeatured && (
-          <Badge className="absolute right-2 top-2 bg-primary">Featured</Badge>
-        )}
-      </div>
+    <Card className="group relative overflow-hidden transition-all duration-300 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 !py-0 !gap-0">
+      {/* Banner - full bleed, no padding */}
+      <Link href={`/server/${server.slug}`} className="block">
+        <div className="relative h-20 bg-gradient-to-br from-secondary to-secondary/50">
+          {server.bannerUrl ? (
+            <img
+              src={server.bannerUrl}
+              alt={server.name}
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center">
+              <CategoryIcon className="h-8 w-8 text-muted-foreground/30" />
+            </div>
+          )}
+          {server.isFeatured && (
+            <Badge className="absolute left-2 top-2 bg-amber-500 text-amber-950 hover:bg-amber-500">Featured</Badge>
+          )}
+        </div>
+      </Link>
 
       <CardContent className="p-4">
         {/* Header with icon and name */}
-        <div className="flex items-start gap-3">
-          <div className="-mt-8 flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg border-2 border-background bg-secondary shadow-lg">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-secondary">
             {server.iconUrl ? (
               <img
                 src={server.iconUrl}
@@ -126,23 +132,21 @@ export function ServerCardCompact({ server }: ServerCardCompactProps) {
                 className="h-full w-full object-cover"
               />
             ) : (
-              <CategoryIcon className="h-7 w-7 text-muted-foreground" />
+              <CategoryIcon className="h-5 w-5 text-muted-foreground" />
             )}
           </div>
 
-          <div className="min-w-0 flex-1 pt-1">
+          <div className="min-w-0 flex-1">
             <Link
               href={`/server/${server.slug}`}
               className="block truncate font-semibold transition-colors hover:text-primary"
             >
               {server.name}
             </Link>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Badge variant="outline" className="gap-1 px-1.5 py-0">
-                <CategoryIcon className="h-2.5 w-2.5" />
-                {server.category.name}
-              </Badge>
-            </div>
+            <Badge variant="outline" className="gap-1 px-1.5 py-0 text-xs">
+              <CategoryIcon className="h-2.5 w-2.5" />
+              {server.category.name}
+            </Badge>
           </div>
         </div>
 
