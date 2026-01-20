@@ -1,5 +1,26 @@
+import type { Metadata } from 'next';
 import { Info, Users, Server, Target, Heart, Zap, Shield, Globe } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { JsonLd, createBreadcrumbSchema, SITE_URL } from '@/components/seo/JsonLd';
+
+export const metadata: Metadata = {
+  title: 'About Us - Hytale Server List',
+  description: 'Learn about Hytale Online List, the premier destination for discovering and sharing Hytale game servers. Our mission is to connect players with amazing communities.',
+  openGraph: {
+    title: 'About Us | Hytale Online List',
+    description: 'Learn about Hytale Online List, the premier destination for discovering and sharing Hytale game servers.',
+    type: 'website',
+    url: `${SITE_URL}/about`,
+  },
+  twitter: {
+    card: 'summary',
+    title: 'About Hytale Online List',
+    description: 'Learn about Hytale Online List, the premier destination for discovering and sharing Hytale game servers.',
+  },
+  alternates: {
+    canonical: `${SITE_URL}/about`,
+  },
+};
 
 const stats = [
   { label: 'Active Servers', value: '500+', icon: Server },
@@ -57,8 +78,14 @@ const team = [
 ];
 
 export default function AboutPage() {
+  const breadcrumbSchema = createBreadcrumbSchema([
+    { name: 'Home', url: SITE_URL },
+    { name: 'About', url: `${SITE_URL}/about` },
+  ]);
+
   return (
     <div className="min-h-screen">
+      <JsonLd data={breadcrumbSchema} />
       {/* Hero Section */}
       <div className="border-b border-border bg-card/50">
         <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">

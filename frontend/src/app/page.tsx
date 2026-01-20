@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ServerCard, ServerCardCompact } from '@/components/servers';
+import { JsonLd, createItemListSchema } from '@/components/seo/JsonLd';
 import type { Server, Category } from '@/types';
 import {
   Gamepad2,
@@ -110,8 +111,19 @@ export default async function HomePage() {
     getStats(),
   ]);
 
+  // Create ItemList schema for top servers
+  const allServers = [...featuredServers, ...topServers].filter(
+    (server, index, self) => self.findIndex(s => s.id === server.id) === index
+  );
+  const itemListSchema = createItemListSchema(
+    allServers.map(s => ({ name: s.name, slug: s.slug })),
+    'Top Hytale Servers'
+  );
+
   return (
     <div className="flex flex-col">
+      <JsonLd data={itemListSchema} />
+
       {/* Hero Section */}
       <section className="relative overflow-hidden border-b border-border bg-gradient-to-b from-primary/10 via-background to-background">
         <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-5" />

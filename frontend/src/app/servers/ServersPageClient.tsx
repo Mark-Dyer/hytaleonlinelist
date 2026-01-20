@@ -49,7 +49,22 @@ const sortOptions = [
   { value: 'newest', label: 'Newest' },
 ];
 
-export function ServersContent() {
+interface ServersPageClientProps {
+  initialServers: Server[];
+  initialMeta: {
+    page: number;
+    size: number;
+    total: number;
+    totalPages: number;
+  };
+  initialCategories: Category[];
+}
+
+export function ServersPageClient({
+  initialServers,
+  initialMeta,
+  initialCategories,
+}: ServersPageClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -59,12 +74,12 @@ export function ServersContent() {
   const initialSearch = searchParams.get('search') || '';
   const initialPage = parseInt(searchParams.get('page') || '1', 10);
 
-  // State
-  const [servers, setServers] = useState<Server[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // State initialized with SSR data
+  const [servers, setServers] = useState<Server[]>(initialServers);
+  const [categories] = useState<Category[]>(initialCategories);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [meta, setMeta] = useState({ page: 1, size: 20, total: 0, totalPages: 0 });
+  const [meta, setMeta] = useState(initialMeta);
 
   // Filter state
   const [searchQuery, setSearchQuery] = useState(initialSearch);
@@ -73,32 +88,27 @@ export function ServersContent() {
   const [onlineOnly, setOnlineOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(initialPage);
 
+  // Track if filters have been modified from initial state
+  const [filtersModified, setFiltersModified] = useState(false);
+
   // Debounced search
   const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery);
-      setCurrentPage(1); // Reset to first page on search
+      if (searchQuery !== initialSearch) {
+        setCurrentPage(1);
+        setFiltersModified(true);
+      }
     }, 300);
     return () => clearTimeout(timer);
-  }, [searchQuery]);
+  }, [searchQuery, initialSearch]);
 
-  // Fetch categories on mount
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const data = await categoryApi.getAllCategories();
-        setCategories(data);
-      } catch {
-        console.error('Failed to fetch categories');
-      }
-    };
-    fetchCategories();
-  }, []);
-
-  // Fetch servers when filters change
+  // Fetch servers when filters change (after initial load)
   const fetchServers = useCallback(async () => {
+    if (!filtersModified) return;
+
     setIsLoading(true);
     setError(null);
 
@@ -120,7 +130,7 @@ export function ServersContent() {
     } finally {
       setIsLoading(false);
     }
-  }, [sortBy, selectedCategory, debouncedSearch, onlineOnly, currentPage]);
+  }, [sortBy, selectedCategory, debouncedSearch, onlineOnly, currentPage, filtersModified]);
 
   useEffect(() => {
     fetchServers();
@@ -128,6 +138,8 @@ export function ServersContent() {
 
   // Update URL when filters change
   useEffect(() => {
+    if (!filtersModified) return;
+
     const params = new URLSearchParams();
     if (sortBy !== 'votes') params.set('sort', sortBy);
     if (selectedCategory) params.set('category', selectedCategory);
@@ -136,7 +148,7 @@ export function ServersContent() {
 
     const query = params.toString();
     router.replace(query ? `/servers?${query}` : '/servers', { scroll: false });
-  }, [sortBy, selectedCategory, debouncedSearch, currentPage, router]);
+  }, [sortBy, selectedCategory, debouncedSearch, currentPage, router, filtersModified]);
 
   const clearFilters = () => {
     setSearchQuery('');
@@ -144,6 +156,12 @@ export function ServersContent() {
     setSortBy('votes');
     setOnlineOnly(false);
     setCurrentPage(1);
+    setFiltersModified(true);
+  };
+
+  const handleFilterChange = () => {
+    setCurrentPage(1);
+    setFiltersModified(true);
   };
 
   const hasActiveFilters = searchQuery || selectedCategory || onlineOnly;
@@ -218,7 +236,7 @@ export function ServersContent() {
                 {/* Sort */}
                 <div className="mb-6">
                   <label className="mb-2 block text-sm font-medium">Sort By</label>
-                  <Select value={sortBy} onValueChange={(value) => { setSortBy(value); setCurrentPage(1); }}>
+                  <Select value={sortBy} onValueChange={(value) => { setSortBy(value); handleFilterChange(); }}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -238,7 +256,7 @@ export function ServersContent() {
                     <input
                       type="checkbox"
                       checked={onlineOnly}
-                      onChange={(e) => { setOnlineOnly(e.target.checked); setCurrentPage(1); }}
+                      onChange={(e) => { setOnlineOnly(e.target.checked); handleFilterChange(); }}
                       className="h-4 w-4 rounded border-border"
                     />
                     <span className="text-sm">Online servers only</span>
@@ -253,7 +271,7 @@ export function ServersContent() {
                       variant={selectedCategory === '' ? 'secondary' : 'ghost'}
                       size="sm"
                       className="w-full justify-start"
-                      onClick={() => { setSelectedCategory(''); setCurrentPage(1); }}
+                      onClick={() => { setSelectedCategory(''); handleFilterChange(); }}
                     >
                       All Categories
                     </Button>
@@ -269,7 +287,7 @@ export function ServersContent() {
                           }
                           size="sm"
                           className="w-full justify-start gap-2"
-                          onClick={() => { setSelectedCategory(category.slug); setCurrentPage(1); }}
+                          onClick={() => { setSelectedCategory(category.slug); handleFilterChange(); }}
                         >
                           <Icon className="h-4 w-4" />
                           {category.name}
@@ -318,7 +336,7 @@ export function ServersContent() {
                       {categories.find((c) => c.slug === selectedCategory)?.name}
                       <X
                         className="h-3 w-3 cursor-pointer"
-                        onClick={() => setSelectedCategory('')}
+                        onClick={() => { setSelectedCategory(''); handleFilterChange(); }}
                       />
                     </Badge>
                   )}
@@ -327,7 +345,7 @@ export function ServersContent() {
                       Online only
                       <X
                         className="h-3 w-3 cursor-pointer"
-                        onClick={() => setOnlineOnly(false)}
+                        onClick={() => { setOnlineOnly(false); handleFilterChange(); }}
                       />
                     </Badge>
                   )}
@@ -349,7 +367,7 @@ export function ServersContent() {
                   <ServerIcon className="mb-4 h-12 w-12 text-destructive" />
                   <h3 className="mb-2 text-lg font-semibold">Error Loading Servers</h3>
                   <p className="mb-4 text-muted-foreground">{error}</p>
-                  <Button variant="outline" onClick={fetchServers}>
+                  <Button variant="outline" onClick={() => { setFiltersModified(true); fetchServers(); }}>
                     Try Again
                   </Button>
                 </CardContent>
@@ -375,7 +393,7 @@ export function ServersContent() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      onClick={() => { setCurrentPage((p) => Math.max(1, p - 1)); setFiltersModified(true); }}
                       disabled={currentPage === 1}
                     >
                       <ChevronLeft className="h-4 w-4" />
@@ -387,7 +405,7 @@ export function ServersContent() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setCurrentPage((p) => Math.min(meta.totalPages, p + 1))}
+                      onClick={() => { setCurrentPage((p) => Math.min(meta.totalPages, p + 1)); setFiltersModified(true); }}
                       disabled={currentPage === meta.totalPages}
                     >
                       Next

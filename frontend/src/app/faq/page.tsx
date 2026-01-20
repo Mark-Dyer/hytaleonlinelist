@@ -1,13 +1,29 @@
-'use client';
-
+import type { Metadata } from 'next';
 import { HelpCircle, Server, Vote, Star, Shield, UserPlus, Settings } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
+import { JsonLd, createFAQSchema, createBreadcrumbSchema, SITE_URL } from '@/components/seo/JsonLd';
+import { FAQAccordion } from './FAQAccordion';
+
+const year = new Date().getFullYear();
+
+export const metadata: Metadata = {
+  title: `FAQ - Hytale Server List Questions Answered`,
+  description: `Find answers to frequently asked questions about Hytale Online List. Learn how to add your server, vote for servers, write reviews, and more.`,
+  openGraph: {
+    title: `FAQ | Hytale Online List`,
+    description: `Find answers to frequently asked questions about Hytale Online List. Learn how to add your server, vote, and more.`,
+    type: 'website',
+    url: `${SITE_URL}/faq`,
+  },
+  twitter: {
+    card: 'summary',
+    title: `FAQ - Hytale Server List ${year}`,
+    description: `Find answers to frequently asked questions about Hytale Online List.`,
+  },
+  alternates: {
+    canonical: `${SITE_URL}/faq`,
+  },
+};
 
 const faqCategories = [
   {
@@ -173,9 +189,26 @@ const faqCategories = [
   },
 ];
 
+// Flatten all FAQ items for schema
+const allFaqItems = faqCategories.flatMap((category) =>
+  category.questions.map((q) => ({
+    question: q.question,
+    answer: q.answer,
+  }))
+);
+
 export default function FAQPage() {
+  const faqSchema = createFAQSchema(allFaqItems);
+  const breadcrumbSchema = createBreadcrumbSchema([
+    { name: 'Home', url: SITE_URL },
+    { name: 'FAQ', url: `${SITE_URL}/faq` },
+  ]);
+
   return (
     <div className="min-h-screen">
+      <JsonLd data={faqSchema} />
+      <JsonLd data={breadcrumbSchema} />
+
       {/* Header */}
       <div className="border-b border-border bg-card/50">
         <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
@@ -210,16 +243,7 @@ export default function FAQPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <Accordion type="single" collapsible className="w-full">
-                  {category.questions.map((faq, index) => (
-                    <AccordionItem key={index} value={`item-${index}`}>
-                      <AccordionTrigger className="text-left">
-                        {faq.question}
-                      </AccordionTrigger>
-                      <AccordionContent>{faq.answer}</AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
+                <FAQAccordion questions={category.questions} />
               </CardContent>
             </Card>
           ))}
