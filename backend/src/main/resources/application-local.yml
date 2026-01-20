@@ -93,12 +93,12 @@ server:
 # Enable by setting cloudflare.r2.enabled=true and providing credentials
 cloudflare:
   r2:
-    enabled: ${R2_ENABLED:false}
-    account-id: ${R2_ACCOUNT_ID:}
-    access-key-id: ${R2_ACCESS_KEY_ID:}
-    secret-access-key: ${R2_SECRET_ACCESS_KEY:}
-    bucket-name: ${R2_BUCKET_NAME:hytale-online-list}
-    public-url: ${R2_PUBLIC_URL:}
+    enabled: true
+    account-id: hytaleonlinelist-dev
+    access-key-id: 5745d1ff2d28093b40539418188e2ae6
+    secret-access-key: 2a59438b67f6c20cbae304eb466dcf03c31b0239bfa588907d28b02a88a0a0ec
+    bucket-name: hytaleonlinelist-dev
+    public-url: https://pub-db04090b56b84d7e8efc17b2ef777656.r2.dev
 
 logging:
   level:

@@ -7,11 +7,13 @@ This document provides a comprehensive overview of all features and functionalit
 1. [Authentication & User Management](#1-authentication--user-management)
 2. [Server Discovery & Browsing](#2-server-discovery--browsing)
 3. [Server Management](#3-server-management)
+   - [Server Claiming & Verification](#35-server-claiming--verification)
 4. [Voting System](#4-voting-system)
 5. [Reviews & Ratings](#5-reviews--ratings)
 6. [Server Status Monitoring](#6-server-status-monitoring)
 7. [User Profiles](#7-user-profiles)
 8. [Administration](#8-administration)
+   - [Claims Management](#85-claims-management)
 9. [File Uploads](#9-file-uploads)
 
 ---
@@ -275,7 +277,12 @@ This document provides a comprehensive overview of all features and functionalit
    - Player count display
    - Vote and view counts
 
-3. **Quick Actions**
+3. **My Claims** (see [Server Claiming](#310-server-claiming))
+   - Active claim initiations
+   - Claim status tracking
+   - Verification instructions
+
+4. **Quick Actions**
    - View server page
    - Edit server
    - Delete server
@@ -364,6 +371,108 @@ This document provides a comprehensive overview of all features and functionalit
 **Requirements**:
 - Email must be verified
 - Must be server owner
+
+---
+
+### 3.5 Server Claiming & Verification
+
+**Description**: Users can claim ownership of unclaimed servers (servers without an owner) by verifying they control the server.
+
+**Key Concepts**:
+- **Unclaimed Servers**: Servers added by admins or imported without an owner
+- **Concurrent Claims**: Multiple users can attempt to claim the same server simultaneously
+- **First to Verify Wins**: The first user to successfully verify ownership becomes the owner
+- **24-Hour Expiry**: Claim initiations expire after 24 hours if not verified
+
+---
+
+#### 3.5.1 Verification Methods
+
+| Method | Description | Requirements |
+|--------|-------------|--------------|
+| **MOTD** | Add verification token to server's Message of the Day | Server must be running with HyQuery or similar |
+| **DNS_TXT** | Add TXT record to server's domain DNS | Server must use a custom domain (not raw IP) |
+| **FILE_UPLOAD** | Upload verification file to server's website | Server must have a website URL configured |
+| **EMAIL** | Verify via domain-matching email | User's email domain must match server's domain |
+
+**Method Availability**:
+- MOTD: Always available
+- DNS_TXT: Available only if server has a domain name (not IP address)
+- FILE_UPLOAD: Available only if server has a website URL configured
+- EMAIL: Available only if user's email domain matches server's domain
+
+---
+
+#### 3.5.2 Claiming Flow
+
+**Initiation**:
+1. User navigates to unclaimed server's page
+2. Clicks "Claim Server" button
+3. Selects verification method
+4. System generates unique verification token
+5. System provides method-specific instructions
+6. Claim initiation created with 24-hour expiry
+
+**Verification**:
+1. User follows instructions to place token
+2. Clicks "Verify" button on server page
+3. System checks verification (method-specific)
+4. If successful:
+   - User becomes server owner
+   - Other pending claims marked as "Claimed by Other"
+5. If failed:
+   - User can retry (unlimited attempts within 24h)
+   - Error message explains what to check
+
+**Cancellation**:
+- Users can cancel their pending claims at any time
+- Cancellation frees up the claim slot for that user-server pair
+
+---
+
+#### 3.5.3 Claim Statuses
+
+| Status | Description |
+|--------|-------------|
+| `PENDING` | Claim is active, awaiting verification |
+| `VERIFIED` | Successfully verified, user became owner |
+| `EXPIRED` | 24-hour window passed without verification |
+| `CANCELLED` | User cancelled their claim |
+| `CLAIMED_BY_OTHER` | Another user verified first |
+
+---
+
+#### 3.5.4 My Claims Dashboard
+
+**Description**: Users can manage their claim initiations from the dashboard.
+
+**Features**:
+- View all active and past claim initiations
+- See verification instructions for pending claims
+- Cancel pending claims
+- Track claim status
+
+**Display Information**:
+- Server name and icon
+- Verification method selected
+- Status with color coding
+- Time remaining (for pending claims)
+- Initiated/expired/completed timestamps
+
+**Location**: `/dashboard` (My Claims section)
+
+---
+
+#### 3.5.5 Claim Restrictions
+
+**User Restrictions**:
+- Must be logged in
+- Must have verified email
+- One claim per user per server (can re-initiate after expiry/cancellation)
+
+**Server Restrictions**:
+- Server must not have an existing owner
+- Server must exist in the system
 
 ---
 
@@ -704,6 +813,37 @@ This document provides a comprehensive overview of all features and functionalit
 
 ---
 
+### 8.5 Claims Management
+
+**Description**: Monitor and manage server claim initiations.
+
+**Features**:
+- View all claim initiations with pagination
+- Filter by status (PENDING, VERIFIED, EXPIRED, CANCELLED, CLAIMED_BY_OTHER)
+- View claims for a specific server
+- See claims expiring soon (within 6 hours)
+- Invalidate pending claims
+- Manually expire overdue claims
+- Clean up old completed claims
+
+**Statistics Displayed**:
+- Total pending claims
+- Claims expiring soon
+- Verifications in last 7 days
+- Total verified/expired/cancelled counts
+
+**Admin Actions**:
+| Action | Available To | Description |
+|--------|--------------|-------------|
+| View Claims | ADMIN, MODERATOR | View all claim initiations |
+| Invalidate Claim | ADMIN only | Cancel a pending claim |
+| Expire Pending | ADMIN only | Manually expire all overdue claims |
+| Cleanup Old Claims | ADMIN only | Delete claims older than N days |
+
+**Location**: `/admin/claims`
+
+---
+
 ## 9. File Uploads
 
 ### 9.1 Overview
@@ -761,10 +901,13 @@ This document provides a comprehensive overview of all features and functionalit
 | Create server | No | No | Yes | Yes | Yes |
 | Edit own server | No | No | Yes | Yes | Yes |
 | Delete own server | No | No | Yes | Yes | Yes |
+| Claim server | No | No | Yes | Yes | Yes |
 | Upload files | No | No | Yes | Yes | Yes |
 | Edit profile | No | Yes | Yes | Yes | Yes |
 | Feature server | No | No | No | Yes | Yes |
 | Verify server | No | No | No | Yes | Yes |
+| View claims (admin) | No | No | No | Yes | Yes |
+| Invalidate claim | No | No | No | No | Yes |
 | Delete any server | No | No | No | No | Yes |
 | Ban/unban users | No | No | No | No | Yes |
 | Change user roles | No | No | No | No | Yes |

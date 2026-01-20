@@ -12,15 +12,16 @@ Complete REST API documentation for Hytale Online List backend.
 
 1. [Authentication](#authentication)
 2. [Servers](#servers)
-3. [Categories](#categories)
-4. [Votes](#votes)
-5. [Reviews](#reviews)
-6. [Users](#users)
-7. [Server Status](#server-status)
-8. [File Uploads](#file-uploads)
-9. [Statistics](#statistics)
-10. [Administration](#administration)
-11. [Error Handling](#error-handling)
+3. [Server Claims](#server-claims)
+4. [Categories](#categories)
+5. [Votes](#votes)
+6. [Reviews](#reviews)
+7. [Users](#users)
+8. [Server Status](#server-status)
+9. [File Uploads](#file-uploads)
+10. [Statistics](#statistics)
+11. [Administration](#administration)
+12. [Error Handling](#error-handling)
 
 ---
 
@@ -439,6 +440,218 @@ DELETE /api/servers/{id}
 **Requires**: Authentication + Email Verified + Ownership
 
 **Response**: `204 No Content`
+
+---
+
+## Server Claims
+
+### Get Claim Status
+
+Get the claim/verification status of a server.
+
+```http
+GET /api/servers/{serverId}/claim/status
+```
+
+**Response**: `200 OK`
+```json
+{
+  "serverId": "uuid",
+  "hasOwner": false,
+  "isClaimable": true,
+  "activeClaimCount": 2,
+  "userHasActiveClaim": false
+}
+```
+
+---
+
+### Get Available Verification Methods
+
+Get available verification methods for a server.
+
+```http
+GET /api/servers/{serverId}/claim/methods
+```
+
+**Response**: `200 OK`
+```json
+[
+  {
+    "method": "MOTD",
+    "displayName": "MOTD Verification",
+    "available": true,
+    "reason": null,
+    "instructions": "Add the verification token to your server's MOTD"
+  },
+  {
+    "method": "DNS_TXT",
+    "displayName": "DNS TXT Record",
+    "available": false,
+    "reason": "Server IP is not a domain name",
+    "instructions": null
+  }
+]
+```
+
+---
+
+### Initiate Claim
+
+Start a claim initiation for a server.
+
+```http
+POST /api/servers/{serverId}/claim/initiate
+Content-Type: application/json
+
+{
+  "verificationMethod": "MOTD"
+}
+```
+
+**Requires**: Authentication + Email Verified
+
+**Response**: `200 OK`
+```json
+{
+  "claimId": "uuid",
+  "serverId": "uuid",
+  "verificationMethod": "MOTD",
+  "verificationToken": "hol-verify-abc123xyz",
+  "instructions": "Add this token to your server's MOTD: hol-verify-abc123xyz",
+  "expiresAt": "ISO8601 timestamp",
+  "status": "PENDING"
+}
+```
+
+**Errors**:
+- `400 Bad Request` - Server already has an owner
+- `400 Bad Request` - User already has an active claim for this server
+- `400 Bad Request` - Verification method not available for this server
+
+---
+
+### Attempt Verification
+
+Attempt to verify a pending claim.
+
+```http
+POST /api/servers/{serverId}/claim/verify?method=MOTD
+```
+
+**Requires**: Authentication + Email Verified
+
+**Response**: `200 OK`
+```json
+{
+  "success": true,
+  "message": "Server successfully claimed!",
+  "serverId": "uuid",
+  "newOwner": true
+}
+```
+
+**Failed Response**: `200 OK`
+```json
+{
+  "success": false,
+  "message": "Verification token not found in server MOTD. Make sure the token is visible and try again.",
+  "serverId": "uuid",
+  "newOwner": false
+}
+```
+
+**Errors**:
+- `400 Bad Request` - No active claim for this server
+- `400 Bad Request` - Claim has expired
+- `400 Bad Request` - Server already claimed by another user
+
+---
+
+### Cancel Claim
+
+Cancel a pending claim.
+
+```http
+DELETE /api/servers/{serverId}/claim/cancel
+```
+
+**Requires**: Authentication + Email Verified
+
+**Response**: `200 OK`
+```json
+{
+  "message": "Claim cancelled successfully."
+}
+```
+
+**Errors**:
+- `404 Not Found` - No active claim found for this server
+
+---
+
+### Get My Claims
+
+Get all claim initiations for the current user.
+
+```http
+GET /api/users/me/claims
+```
+
+**Requires**: Authentication
+
+**Response**: `200 OK`
+```json
+[
+  {
+    "id": "uuid",
+    "serverId": "uuid",
+    "serverName": "My Server",
+    "serverSlug": "my-server",
+    "serverIconUrl": "string | null",
+    "verificationMethod": "MOTD",
+    "verificationToken": "hol-verify-abc123xyz",
+    "status": "PENDING",
+    "initiatedAt": "ISO8601 timestamp",
+    "expiresAt": "ISO8601 timestamp",
+    "lastAttemptAt": "ISO8601 timestamp | null",
+    "attemptCount": 2,
+    "cancelledAt": "ISO8601 timestamp | null",
+    "completedAt": "ISO8601 timestamp | null"
+  }
+]
+```
+
+---
+
+### Get My Active Claims
+
+Get only active (pending) claims for the current user.
+
+```http
+GET /api/users/me/claims/active
+```
+
+**Requires**: Authentication
+
+**Response**: `200 OK` - Array of claim objects (same format as above)
+
+---
+
+### Get Active Claims Count
+
+Get count of active claims for badge display.
+
+```http
+GET /api/users/me/claims/active/count
+```
+
+**Requires**: Authentication
+
+**Response**: `200 OK`
+```json
+3
+```
 
 ---
 
@@ -1100,6 +1313,172 @@ DELETE /api/reviews/admin/{reviewId}
 **Requires**: ADMIN role only
 
 **Response**: `204 No Content`
+
+---
+
+### Get Claim Statistics
+
+Get claim statistics for admin dashboard.
+
+```http
+GET /api/admin/claims/stats
+```
+
+**Requires**: ADMIN or MODERATOR role
+
+**Response**: `200 OK`
+```json
+{
+  "pendingClaims": 15,
+  "expiringSoon": 3,
+  "verificationsLast7Days": 42,
+  "totalVerified": 150,
+  "totalExpired": 25,
+  "totalCancelled": 10
+}
+```
+
+---
+
+### List All Claims
+
+Get all claim initiations with pagination.
+
+```http
+GET /api/admin/claims
+```
+
+**Query Parameters**:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `page` | integer | Page number (0-indexed, default: 0) |
+| `size` | integer | Items per page (default: 20) |
+| `status` | string | Filter by status (PENDING, VERIFIED, EXPIRED, CANCELLED, CLAIMED_BY_OTHER) |
+
+**Requires**: ADMIN or MODERATOR role
+
+**Response**: `200 OK`
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "serverId": "uuid",
+      "serverName": "My Server",
+      "serverSlug": "my-server",
+      "serverIconUrl": "string | null",
+      "userId": "uuid",
+      "username": "string",
+      "verificationMethod": "MOTD",
+      "status": "PENDING",
+      "initiatedAt": "ISO8601 timestamp",
+      "expiresAt": "ISO8601 timestamp",
+      "lastAttemptAt": "ISO8601 timestamp | null",
+      "attemptCount": 2
+    }
+  ],
+  "meta": {
+    "page": 0,
+    "size": 20,
+    "total": 100,
+    "totalPages": 5
+  }
+}
+```
+
+---
+
+### Get Claims Expiring Soon
+
+Get claims expiring within 6 hours.
+
+```http
+GET /api/admin/claims/expiring-soon
+```
+
+**Requires**: ADMIN or MODERATOR role
+
+**Response**: `200 OK` - Array of claim objects
+
+---
+
+### Get Claims for Server
+
+Get all claim initiations for a specific server.
+
+```http
+GET /api/admin/claims/server/{serverId}
+```
+
+**Requires**: ADMIN or MODERATOR role
+
+**Response**: `200 OK` - Array of claim objects
+
+---
+
+### Invalidate Claim
+
+Cancel a pending claim (admin action).
+
+```http
+DELETE /api/admin/claims/{claimId}
+```
+
+**Requires**: ADMIN role only
+
+**Response**: `200 OK`
+```json
+{
+  "message": "Claim invalidated successfully."
+}
+```
+
+**Errors**:
+- `400 Bad Request` - Only pending claims can be invalidated
+- `404 Not Found` - Claim not found
+
+---
+
+### Expire Pending Claims
+
+Manually expire all pending claims that have passed their expiry time.
+
+```http
+POST /api/admin/claims/expire-pending
+```
+
+**Requires**: ADMIN role only
+
+**Response**: `200 OK`
+```json
+{
+  "message": "Expired 5 pending claims."
+}
+```
+
+---
+
+### Cleanup Old Claims
+
+Delete old completed claims (older than specified days).
+
+```http
+DELETE /api/admin/claims/cleanup
+```
+
+**Query Parameters**:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `daysToKeep` | integer | Keep claims newer than this (default: 90) |
+
+**Requires**: ADMIN role only
+
+**Response**: `200 OK`
+```json
+{
+  "message": "Deleted 25 old claims (older than 90 days)."
+}
+```
 
 ---
 

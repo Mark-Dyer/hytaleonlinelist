@@ -28,10 +28,10 @@ This document describes the PostgreSQL database schema, entities, relationships,
 
 | Metric | Count |
 |--------|-------|
-| Tables | 9 |
-| Indexes | 20+ |
-| Foreign Keys | 12 |
-| Enumerations | 5 |
+| Tables | 10 |
+| Indexes | 25+ |
+| Foreign Keys | 14 |
+| Enumerations | 7 |
 
 ---
 
@@ -84,6 +84,19 @@ This document describes the PostgreSQL database schema, entities, relationships,
 │                                │ details          │                         │
 │                                │ created_at       │                         │
 │                                └──────────────────┘                         │
+│                                                                              │
+│   ┌─────────────────────────────┐                                           │
+│   │  server_claim_initiations   │                                           │
+│   ├─────────────────────────────┤                                           │
+│   │ id (PK)                     │                                           │
+│   │ server_id (FK)──────────────┼──────► servers                            │
+│   │ user_id (FK)────────────────┼──────► users                              │
+│   │ verification_method         │                                           │
+│   │ status                      │                                           │
+│   │ initiated_at                │                                           │
+│   │ expires_at                  │                                           │
+│   │ attempt_count               │                                           │
+│   └─────────────────────────────┘                                           │
 │                                                                              │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -154,7 +167,7 @@ Stores server listing information.
 | `view_count` | INTEGER | NO | 0 | Page view count |
 | `is_featured` | BOOLEAN | NO | FALSE | Featured server flag |
 | `is_verified` | BOOLEAN | NO | FALSE | Verified server flag |
-| `owner_id` | UUID | NO | - | Owner user reference |
+| `owner_id` | UUID | YES | NULL | Owner user reference (null if unclaimed) |
 | `category_id` | UUID | NO | - | Category reference |
 | `preferred_query_protocol` | VARCHAR(20) | YES | NULL | Last successful protocol |
 | `query_port` | INTEGER | YES | NULL | Query port if different |
@@ -320,6 +333,32 @@ Stores admin action audit log.
 
 ---
 
+### server_claim_initiations
+
+Tracks user claim initiations for unclaimed servers. Supports concurrent claims where multiple users can attempt to claim the same server - first to verify wins.
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|----------|---------|-------------|
+| `id` | UUID | NO | gen_random_uuid() | Primary key |
+| `server_id` | UUID | NO | - | Server being claimed |
+| `user_id` | UUID | NO | - | User attempting claim |
+| `verification_method` | VARCHAR(20) | NO | - | Method used (MOTD, DNS_TXT, FILE_UPLOAD, EMAIL) |
+| `status` | VARCHAR(20) | NO | 'PENDING' | Claim status |
+| `initiated_at` | TIMESTAMP | NO | NOW() | When claim was started |
+| `expires_at` | TIMESTAMP | NO | - | When claim expires (24h after initiation) |
+| `last_attempt_at` | TIMESTAMP | YES | NULL | Last verification attempt time |
+| `attempt_count` | INTEGER | NO | 0 | Number of verification attempts |
+| `cancelled_at` | TIMESTAMP | YES | NULL | When claim was cancelled |
+| `completed_at` | TIMESTAMP | YES | NULL | When claim was resolved (verified/expired) |
+
+**Constraints**:
+- PRIMARY KEY (`id`)
+- UNIQUE (`server_id`, `user_id`) - One claim per user per server
+- FOREIGN KEY (`server_id`) REFERENCES `servers`(`id`) ON DELETE CASCADE
+- FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+
+---
+
 ## Indexes
 
 ### users
@@ -379,6 +418,17 @@ Stores admin action audit log.
 | `server_tags_pkey` | id | PRIMARY KEY | Primary lookup |
 | `idx_server_tags_server_id` | server_id | B-TREE | Server tags |
 | `idx_server_tags_tag` | tag | B-TREE | Tag search |
+
+### server_claim_initiations
+
+| Index Name | Columns | Type | Purpose |
+|------------|---------|------|---------|
+| `server_claim_initiations_pkey` | id | PRIMARY KEY | Primary lookup |
+| `uk_claim_init_server_user` | server_id, user_id | UNIQUE | One claim per user per server |
+| `idx_claim_init_server_id` | server_id | B-TREE | Server claims lookup |
+| `idx_claim_init_user_id` | user_id | B-TREE | User claims lookup |
+| `idx_claim_init_status` | status | B-TREE | Status filtering |
+| `idx_claim_init_expires_at` | expires_at | B-TREE | Expiring claims queries |
 
 ---
 
@@ -446,6 +496,31 @@ Supported OAuth providers.
 'GOOGLE'   -- Google OAuth2
 ```
 
+### VerificationMethod
+
+Methods for verifying server ownership.
+
+```sql
+-- Stored as VARCHAR(20)
+'MOTD'         -- Add token to server's Message of the Day
+'DNS_TXT'      -- Add TXT record to server's domain DNS
+'FILE_UPLOAD'  -- Upload verification file to server's website
+'EMAIL'        -- Verify via domain-matching email address
+```
+
+### ClaimInitiationStatus
+
+Status of a server claim initiation.
+
+```sql
+-- Stored as VARCHAR(20)
+'PENDING'          -- Active claim awaiting verification
+'VERIFIED'         -- Successfully verified, user became owner
+'EXPIRED'          -- 24-hour window passed without verification
+'CANCELLED'        -- User cancelled their claim
+'CLAIMED_BY_OTHER' -- Another user verified first
+```
+
 ---
 
 ## Migrations
@@ -456,24 +531,18 @@ Flyway migrations are located in `backend/src/main/resources/db/migration/`.
 
 | Version | Description |
 |---------|-------------|
-| V1 | Create users table |
-| V2 | Create categories table with seed data |
-| V3 | Create servers table |
-| V4 | Create reviews table |
-| V5 | Create votes table with daily limit |
-| V6 | Add OAuth fields to users |
-| V7 | Create refresh_tokens table |
-| V8 | Add email verification fields |
-| V9 | Add password reset fields |
-| V10 | Add server tags |
-| V11 | Add ban fields to users |
-| V12 | Create admin_actions table |
-| V13 | Add view_count to servers |
-| V14 | Add server rating fields |
-| V15 | Add uptime_percentage to servers |
-| V16 | Create server_status_history table |
-| V17 | Cleanup query protocol values |
-| V18 | Allow null player_count |
+| V1 | Create users table (with auth, profile, and ban fields) |
+| V2 | Create categories table |
+| V3 | Create servers table (with status monitoring and claiming fields) |
+| V4 | Create server_tags table |
+| V5 | Create reviews table (with updated_at) |
+| V6 | Create votes table (with daily limit) |
+| V7 | Seed categories data |
+| V8 | Create refresh_tokens table |
+| V9 | Create admin_actions table |
+| V10 | Create server_status_history table |
+| V11 | Create server_claim_attempts table |
+| V12 | Create server_claim_initiations table |
 
 ### Running Migrations
 
@@ -519,6 +588,7 @@ ALTER TABLE servers ADD COLUMN discord_webhook_url VARCHAR(500);
 | Expired refresh tokens | 7 days | On access |
 | Email verification tokens | 24 hours | Manual |
 | Password reset tokens | 1 hour | Manual |
+| Completed claim initiations | 90 days | Manual (admin action) |
 
 ### Cascade Deletions
 
@@ -527,9 +597,11 @@ When a **user** is deleted:
 - All reviews by user are deleted
 - All votes by user are deleted
 - All refresh tokens are deleted
+- All claim initiations by user are deleted
 
 When a **server** is deleted:
 - All reviews are deleted
 - All votes are deleted
 - All tags are deleted
 - All status history is deleted
+- All claim initiations are deleted
