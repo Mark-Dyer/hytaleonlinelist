@@ -19,6 +19,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { dashboardApi } from '@/lib/dashboard-api';
 import { ApiError } from '@/lib/api';
 import type { Server } from '@/types';
+import { MyClaimsSection } from '@/components/claims';
 import {
   Plus,
   Server as ServerIcon,
@@ -202,6 +203,11 @@ export default function DashboardPage() {
             </Card>
           </div>
         )}
+
+        {/* My Claims Section */}
+        <div className="mb-8">
+          <MyClaimsSection />
+        </div>
 
         {/* Server List */}
         <Card>

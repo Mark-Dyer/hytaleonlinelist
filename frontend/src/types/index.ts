@@ -142,8 +142,8 @@ export interface AdminServer {
   name: string;
   slug: string;
   iconUrl: string | null;
-  ownerUsername: string;
-  ownerId: string;
+  ownerUsername: string | null;
+  ownerId: string | null;
   isFeatured: boolean;
   isVerified: boolean;
   isOnline: boolean;

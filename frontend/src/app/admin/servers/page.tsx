@@ -219,7 +219,9 @@ export default function AdminServersPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm">@{server.ownerUsername}</td>
+                    <td className="px-4 py-3 text-sm">
+                      {server.ownerUsername ? `@${server.ownerUsername}` : <span className="text-muted-foreground italic">Unclaimed</span>}
+                    </td>
                     <td className="px-4 py-3 text-sm">{server.voteCount}</td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">

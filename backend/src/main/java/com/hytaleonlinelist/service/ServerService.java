@@ -156,11 +156,12 @@ public class ServerService {
     public ServerResponse getServerByIdForOwner(UUID serverId, UUID ownerId) {
         ServerEntity server = serverRepository.findById(serverId)
                 .orElseThrow(() -> new ResourceNotFoundException("Server not found"));
-        
-        if (!server.getOwner().getId().equals(ownerId)) {
+
+        // Server must have an owner and it must match the requesting user
+        if (server.getOwner() == null || !server.getOwner().getId().equals(ownerId)) {
             throw new ResourceNotFoundException("Server not found");
         }
-        
+
         return serverMapper.toResponse(server);
     }
 
@@ -175,8 +176,8 @@ public class ServerService {
         ServerEntity server = serverRepository.findById(serverId)
                 .orElseThrow(() -> new ResourceNotFoundException("Server not found"));
 
-        // Verify ownership
-        if (!server.getOwner().getId().equals(owner.getId())) {
+        // Verify ownership - server must have an owner and it must match the requesting user
+        if (server.getOwner() == null || !server.getOwner().getId().equals(owner.getId())) {
             throw new SecurityException("You are not the owner of this server");
         }
 
@@ -220,8 +221,8 @@ public class ServerService {
         ServerEntity server = serverRepository.findById(serverId)
                 .orElseThrow(() -> new ResourceNotFoundException("Server not found"));
 
-        // Verify ownership
-        if (!server.getOwner().getId().equals(owner.getId())) {
+        // Verify ownership - server must have an owner and it must match the requesting user
+        if (server.getOwner() == null || !server.getOwner().getId().equals(owner.getId())) {
             throw new SecurityException("You are not the owner of this server");
         }
 

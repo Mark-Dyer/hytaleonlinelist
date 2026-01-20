@@ -10,6 +10,7 @@ import {
   Users,
   ScrollText,
   Shield,
+  FileCheck,
 } from 'lucide-react';
 
 const navItems = [
@@ -29,6 +30,12 @@ const navItems = [
     href: '/admin/users',
     label: 'Users',
     icon: Users,
+    roles: ['ADMIN', 'MODERATOR'],
+  },
+  {
+    href: '/admin/claims',
+    label: 'Claims',
+    icon: FileCheck,
     roles: ['ADMIN', 'MODERATOR'],
   },
   {

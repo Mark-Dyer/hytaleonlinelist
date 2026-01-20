@@ -107,8 +107,24 @@ public class ServerEntity {
     @Column(name = "query_port")
     private Integer queryPort;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "owner_id", nullable = false)
+    @Column(name = "claim_token", length = 20)
+    private String claimToken;
+
+    @Column(name = "claim_token_expiry")
+    private Instant claimTokenExpiry;
+
+    // Note: claiming_user_id has been moved to server_claim_initiations table
+    // to support concurrent claims. Use ServerClaimInitiationRepository instead.
+
+    @Column(name = "verification_method", length = 20)
+    @Enumerated(EnumType.STRING)
+    private VerificationMethod verificationMethod;
+
+    @Column(name = "verified_at")
+    private Instant verifiedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "owner_id", nullable = true)
     private UserEntity owner;
 
     @OneToMany(mappedBy = "server", fetch = FetchType.LAZY)
@@ -345,6 +361,40 @@ public class ServerEntity {
 
     public void setQueryPort(Integer queryPort) {
         this.queryPort = queryPort;
+    }
+
+    public String getClaimToken() {
+        return claimToken;
+    }
+
+    public void setClaimToken(String claimToken) {
+        this.claimToken = claimToken;
+    }
+
+    public Instant getClaimTokenExpiry() {
+        return claimTokenExpiry;
+    }
+
+    public void setClaimTokenExpiry(Instant claimTokenExpiry) {
+        this.claimTokenExpiry = claimTokenExpiry;
+    }
+
+    // Note: getClaimingUser/setClaimingUser removed - use ServerClaimInitiationRepository
+
+    public VerificationMethod getVerificationMethod() {
+        return verificationMethod;
+    }
+
+    public void setVerificationMethod(VerificationMethod verificationMethod) {
+        this.verificationMethod = verificationMethod;
+    }
+
+    public Instant getVerifiedAt() {
+        return verifiedAt;
+    }
+
+    public void setVerifiedAt(Instant verifiedAt) {
+        this.verifiedAt = verifiedAt;
     }
 
     public UserEntity getOwner() {

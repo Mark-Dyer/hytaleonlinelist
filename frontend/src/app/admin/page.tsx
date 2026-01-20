@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { adminApi } from '@/lib/admin-api';
 import { ApiError } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { AdminStats, AdminAction } from '@/types';
 import {
@@ -53,20 +54,26 @@ function formatTimeAgo(dateString: string): string {
 }
 
 export default function AdminDashboardPage() {
+  const { user } = useAuth();
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [recentActions, setRecentActions] = useState<AdminAction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const isAdmin = user?.role === 'ADMIN';
+
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [statsData, actionsData] = await Promise.all([
-          adminApi.getStats(),
-          adminApi.getAuditLog(0, 10),
-        ]);
+        // Fetch stats (available to both ADMIN and MODERATOR)
+        const statsData = await adminApi.getStats();
         setStats(statsData);
-        setRecentActions(actionsData.data);
+
+        // Fetch audit log only for ADMIN users
+        if (isAdmin) {
+          const actionsData = await adminApi.getAuditLog(0, 10);
+          setRecentActions(actionsData.data);
+        }
       } catch (err) {
         if (err instanceof ApiError) {
           setError(err.message);
@@ -79,7 +86,7 @@ export default function AdminDashboardPage() {
     };
 
     loadData();
-  }, []);
+  }, [isAdmin]);
 
   if (isLoading) {
     return (
@@ -211,63 +218,67 @@ export default function AdminDashboardPage() {
           </Card>
         </Link>
 
-        <Link href="/admin/audit-log">
-          <Card className="cursor-pointer transition-colors hover:bg-accent/50">
-            <CardContent className="flex items-center gap-4 p-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                <AlertCircle className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-semibold">Audit Log</h3>
-                <p className="text-sm text-muted-foreground">
-                  View all admin actions
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
+        {isAdmin && (
+          <Link href="/admin/audit-log">
+            <Card className="cursor-pointer transition-colors hover:bg-accent/50">
+              <CardContent className="flex items-center gap-4 p-6">
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
+                  <AlertCircle className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Audit Log</h3>
+                  <p className="text-sm text-muted-foreground">
+                    View all admin actions
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        )}
       </div>
 
-      {/* Recent Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {recentActions.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">
-              No recent admin actions
-            </p>
-          ) : (
-            <div className="space-y-4">
-              {recentActions.map((action) => {
-                const Icon = actionIcons[action.actionType] || AlertCircle;
-                return (
-                  <div
-                    key={action.id}
-                    className="flex items-start gap-4 rounded-lg border border-border p-4"
-                  >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                      <Icon className="h-5 w-5 text-muted-foreground" />
+      {/* Recent Activity - Admin only */}
+      {isAdmin && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {recentActions.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">
+                No recent admin actions
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {recentActions.map((action) => {
+                  const Icon = actionIcons[action.actionType] || AlertCircle;
+                  return (
+                    <div
+                      key={action.id}
+                      className="flex items-start gap-4 rounded-lg border border-border p-4"
+                    >
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                        <Icon className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium">
+                          {formatActionType(action.actionType)}
+                        </p>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {action.details || `Target: ${action.targetName}`}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          By @{action.adminUsername} · {formatTimeAgo(action.createdAt)}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium">
-                        {formatActionType(action.actionType)}
-                      </p>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {action.details || `Target: ${action.targetName}`}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        By @{action.adminUsername} · {formatTimeAgo(action.createdAt)}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

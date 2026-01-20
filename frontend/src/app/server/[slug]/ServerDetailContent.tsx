@@ -11,7 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { voteApi } from '@/lib/vote-api';
 import { ApiError } from '@/lib/api';
 import { ReviewList, StarRating } from '@/components/reviews';
-import { ServerStatusSection } from '@/components/servers';
+import { ServerStatusSection, VerifiedBadge, ClaimServerDialog } from '@/components/servers';
 import type { Server } from '@/types';
 import {
   Copy,
@@ -33,6 +33,7 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle,
+  ShieldQuestion,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ServerStatusBadge } from '@/components/servers';
@@ -74,6 +75,8 @@ export function ServerDetailContent({ server }: ServerDetailContentProps) {
   const [voteError, setVoteError] = useState<string | null>(null);
   const [voteSuccess, setVoteSuccess] = useState(false);
   const [checkingVoteStatus, setCheckingVoteStatus] = useState(false);
+  const [claimDialogOpen, setClaimDialogOpen] = useState(false);
+  const [isVerified, setIsVerified] = useState(server.isVerified);
 
   const CategoryIcon = categoryIcons[server.category.slug] || Gamepad2;
 
@@ -238,9 +241,7 @@ export function ServerDetailContent({ server }: ServerDetailContentProps) {
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-3xl font-bold">{server.name}</h1>
-                {server.isVerified && (
-                  <Badge className="bg-primary">Verified</Badge>
-                )}
+                {isVerified && <VerifiedBadge />}
                 {server.isFeatured && (
                   <Badge variant="secondary">Featured</Badge>
                 )}
@@ -347,6 +348,18 @@ export function ServerDetailContent({ server }: ServerDetailContentProps) {
                 </Button>
               </a>
             )}
+
+            {/* Claim Server Button - show if not verified and user is authenticated */}
+            {!isVerified && isAuthenticated && (
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={() => setClaimDialogOpen(true)}
+              >
+                <ShieldQuestion className="h-4 w-4" />
+                Claim Server
+              </Button>
+            )}
           </div>
         </div>
 
@@ -436,7 +449,7 @@ export function ServerDetailContent({ server }: ServerDetailContentProps) {
                   serverId={server.id}
                   reviewCount={server.reviewCount}
                   averageRating={server.averageRating}
-                  isServerOwner={user?.id === server.owner.id}
+                  isServerOwner={user?.id === server.owner?.id}
                 />
               </TabsContent>
             </Tabs>
@@ -524,28 +537,30 @@ export function ServerDetailContent({ server }: ServerDetailContentProps) {
               </CardContent>
             </Card>
 
-            {/* Owner Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Server Owner</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                    <span className="font-semibold text-primary">
-                      {server.owner.username.charAt(0).toUpperCase()}
-                    </span>
+            {/* Owner Info - only show if server has an owner */}
+            {server.owner && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Server Owner</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                      <span className="font-semibold text-primary">
+                        {server.owner.username.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-semibold">{server.owner.username}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Listed on{' '}
+                        {new Date(server.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-semibold">{server.owner.username}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Listed on{' '}
-                      {new Date(server.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Back Button */}
             <Link href="/servers">
@@ -557,6 +572,15 @@ export function ServerDetailContent({ server }: ServerDetailContentProps) {
           </div>
         </div>
       </div>
+
+      {/* Claim Server Dialog */}
+      <ClaimServerDialog
+        serverId={server.id}
+        serverName={server.name}
+        open={claimDialogOpen}
+        onOpenChange={setClaimDialogOpen}
+        onVerificationSuccess={() => setIsVerified(true)}
+      />
     </div>
   );
 }

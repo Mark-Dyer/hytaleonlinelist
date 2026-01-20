@@ -73,8 +73,8 @@ public class ReviewService {
             throw new IllegalStateException("You have already reviewed this server");
         }
 
-        // Check if user is the server owner
-        if (server.getOwner().getId().equals(user.getId())) {
+        // Check if user is the server owner (only if server has an owner)
+        if (server.getOwner() != null && server.getOwner().getId().equals(user.getId())) {
             throw new IllegalStateException("You cannot review your own server");
         }
 

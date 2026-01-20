@@ -31,14 +31,23 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
 
     Optional<UserEntity> findByPasswordResetToken(String token);
 
-    @Query("SELECT u FROM UserEntity u WHERE LOWER(u.email) = LOWER(:email) OR LOWER(u.username) = LOWER(:username)")
+    @Query(value = "SELECT * FROM users u WHERE " +
+           "CAST(u.email AS TEXT) ILIKE CAST(:email AS TEXT) " +
+           "OR CAST(u.username AS TEXT) ILIKE CAST(:username AS TEXT) LIMIT 1",
+           nativeQuery = true)
     Optional<UserEntity> findByEmailOrUsernameIgnoreCase(@Param("email") String email, @Param("username") String username);
 
     // Admin methods
-    @Query("SELECT u FROM UserEntity u WHERE " +
-           "(:search IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))) " +
-           "ORDER BY u.createdAt DESC")
+    @Query(value = "SELECT * FROM users u WHERE " +
+           "(:search IS NULL OR :search = '' OR " +
+           "CAST(u.username AS TEXT) ILIKE CONCAT('%', CAST(:search AS TEXT), '%') " +
+           "OR CAST(u.email AS TEXT) ILIKE CONCAT('%', CAST(:search AS TEXT), '%')) " +
+           "ORDER BY u.created_at DESC",
+           countQuery = "SELECT COUNT(*) FROM users u WHERE " +
+           "(:search IS NULL OR :search = '' OR " +
+           "CAST(u.username AS TEXT) ILIKE CONCAT('%', CAST(:search AS TEXT), '%') " +
+           "OR CAST(u.email AS TEXT) ILIKE CONCAT('%', CAST(:search AS TEXT), '%'))",
+           nativeQuery = true)
     Page<UserEntity> findAllWithSearch(@Param("search") String search, Pageable pageable);
 
     @Query("SELECT COUNT(u) FROM UserEntity u WHERE u.createdAt >= :since")

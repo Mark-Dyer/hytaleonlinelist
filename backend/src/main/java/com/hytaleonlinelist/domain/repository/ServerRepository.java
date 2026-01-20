@@ -32,10 +32,10 @@ public interface ServerRepository extends JpaRepository<ServerEntity, UUID>, Jpa
            "LEFT JOIN categories c ON s.category_id = c.id " +
            "WHERE (:categorySlug IS NULL OR c.slug = :categorySlug) " +
            "AND (:online IS NULL OR s.is_online = :online) " +
-           "AND (:search IS NULL OR " +
-           "     LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "     LOWER(s.short_description) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "     LOWER(CAST(t.tag AS VARCHAR)) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+           "AND (:search IS NULL OR :search = '' OR " +
+           "     CAST(s.name AS TEXT) ILIKE CONCAT('%', CAST(:search AS TEXT), '%') OR " +
+           "     CAST(s.short_description AS TEXT) ILIKE CONCAT('%', CAST(:search AS TEXT), '%') OR " +
+           "     CAST(t.tag AS TEXT) ILIKE CONCAT('%', CAST(:search AS TEXT), '%')) " +
            "GROUP BY s.id " +
            "ORDER BY " +
            "CASE WHEN :sortBy = 'voteCount' THEN s.vote_count END DESC NULLS LAST, " +
@@ -48,10 +48,10 @@ public interface ServerRepository extends JpaRepository<ServerEntity, UUID>, Jpa
            "LEFT JOIN categories c ON s.category_id = c.id " +
            "WHERE (:categorySlug IS NULL OR c.slug = :categorySlug) " +
            "AND (:online IS NULL OR s.is_online = :online) " +
-           "AND (:search IS NULL OR " +
-           "     LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "     LOWER(s.short_description) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "     LOWER(CAST(t.tag AS VARCHAR)) LIKE LOWER(CONCAT('%', :search, '%')))",
+           "AND (:search IS NULL OR :search = '' OR " +
+           "     CAST(s.name AS TEXT) ILIKE CONCAT('%', CAST(:search AS TEXT), '%') OR " +
+           "     CAST(s.short_description AS TEXT) ILIKE CONCAT('%', CAST(:search AS TEXT), '%') OR " +
+           "     CAST(t.tag AS TEXT) ILIKE CONCAT('%', CAST(:search AS TEXT), '%'))",
            nativeQuery = true)
     Page<ServerEntity> findWithFilters(
             @Param("categorySlug") String categorySlug,
@@ -72,10 +72,18 @@ public interface ServerRepository extends JpaRepository<ServerEntity, UUID>, Jpa
     List<ServerEntity> findByOwnerId(UUID ownerId);
 
     // Admin methods
-    @Query("SELECT s FROM ServerEntity s LEFT JOIN FETCH s.owner WHERE " +
-           "(:search IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "OR LOWER(s.owner.username) LIKE LOWER(CONCAT('%', :search, '%'))) " +
-           "ORDER BY s.createdAt DESC")
+    @Query(value = "SELECT DISTINCT s.* FROM servers s " +
+           "LEFT JOIN users u ON s.owner_id = u.id " +
+           "WHERE (:search IS NULL OR :search = '' OR " +
+           "       CAST(s.name AS TEXT) ILIKE CONCAT('%', CAST(:search AS TEXT), '%') " +
+           "       OR CAST(u.username AS TEXT) ILIKE CONCAT('%', CAST(:search AS TEXT), '%')) " +
+           "ORDER BY s.created_at DESC",
+           countQuery = "SELECT COUNT(DISTINCT s.id) FROM servers s " +
+           "LEFT JOIN users u ON s.owner_id = u.id " +
+           "WHERE (:search IS NULL OR :search = '' OR " +
+           "       CAST(s.name AS TEXT) ILIKE CONCAT('%', CAST(:search AS TEXT), '%') " +
+           "       OR CAST(u.username AS TEXT) ILIKE CONCAT('%', CAST(:search AS TEXT), '%'))",
+           nativeQuery = true)
     Page<ServerEntity> findAllWithSearchForAdmin(@Param("search") String search, Pageable pageable);
 
     @Query("SELECT COUNT(s) FROM ServerEntity s WHERE s.createdAt >= :since")
@@ -89,4 +97,36 @@ public interface ServerRepository extends JpaRepository<ServerEntity, UUID>, Jpa
      */
     @Query("SELECT s FROM ServerEntity s ORDER BY s.lastPingedAt ASC NULLS FIRST")
     List<ServerEntity> findServersNeedingPing(Pageable pageable);
+
+    // Claim and verification queries
+
+    /**
+     * Find all unclaimed servers (servers without an owner).
+     */
+    @Query("SELECT s FROM ServerEntity s WHERE s.owner IS NULL")
+    Page<ServerEntity> findUnclaimedServers(Pageable pageable);
+
+    /**
+     * Find verified servers.
+     */
+    @Query("SELECT s FROM ServerEntity s WHERE s.verifiedAt IS NOT NULL")
+    Page<ServerEntity> findVerifiedServers(Pageable pageable);
+
+    /**
+     * Find servers with expired claim tokens (for cleanup).
+     */
+    @Query("SELECT s FROM ServerEntity s WHERE s.claimToken IS NOT NULL AND s.claimTokenExpiry < :now AND s.verifiedAt IS NULL")
+    List<ServerEntity> findServersWithExpiredClaimTokens(@Param("now") Instant now);
+
+    /**
+     * Count unclaimed servers.
+     */
+    @Query("SELECT COUNT(s) FROM ServerEntity s WHERE s.owner IS NULL")
+    long countUnclaimedServers();
+
+    /**
+     * Count verified servers.
+     */
+    @Query("SELECT COUNT(s) FROM ServerEntity s WHERE s.verifiedAt IS NOT NULL")
+    long countVerifiedServers();
 }
