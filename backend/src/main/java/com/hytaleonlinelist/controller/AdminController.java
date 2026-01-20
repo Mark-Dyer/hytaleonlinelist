@@ -1,5 +1,6 @@
 package com.hytaleonlinelist.controller;
 
+import com.hytaleonlinelist.config.AppProperties;
 import com.hytaleonlinelist.dto.request.BanUserRequest;
 import com.hytaleonlinelist.dto.request.ChangeRoleRequest;
 import com.hytaleonlinelist.dto.response.*;
@@ -18,9 +19,11 @@ import java.util.UUID;
 public class AdminController {
 
     private final AdminService adminService;
+    private final AppProperties appProperties;
 
-    public AdminController(AdminService adminService) {
+    public AdminController(AdminService adminService, AppProperties appProperties) {
         this.adminService = adminService;
+        this.appProperties = appProperties;
     }
 
     @GetMapping("/stats")
@@ -104,5 +107,53 @@ public class AdminController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(adminService.getAuditLog(page, size));
+    }
+
+    // Settings endpoints
+
+    @GetMapping("/settings")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<AdminSettingsResponse> getSettings() {
+        return ResponseEntity.ok(new AdminSettingsResponse(
+                appProperties.isRegistrationEnabled(),
+                appProperties.isDiscordLoginEnabled(),
+                appProperties.isGoogleLoginEnabled()
+        ));
+    }
+
+    @PutMapping("/settings/registration")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<AdminSettingsResponse> setRegistrationEnabled(
+            @RequestParam boolean enabled) {
+        appProperties.setRegistrationEnabled(enabled);
+        return ResponseEntity.ok(new AdminSettingsResponse(
+                appProperties.isRegistrationEnabled(),
+                appProperties.isDiscordLoginEnabled(),
+                appProperties.isGoogleLoginEnabled()
+        ));
+    }
+
+    @PutMapping("/settings/discord-login")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<AdminSettingsResponse> setDiscordLoginEnabled(
+            @RequestParam boolean enabled) {
+        appProperties.setDiscordLoginEnabled(enabled);
+        return ResponseEntity.ok(new AdminSettingsResponse(
+                appProperties.isRegistrationEnabled(),
+                appProperties.isDiscordLoginEnabled(),
+                appProperties.isGoogleLoginEnabled()
+        ));
+    }
+
+    @PutMapping("/settings/google-login")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<AdminSettingsResponse> setGoogleLoginEnabled(
+            @RequestParam boolean enabled) {
+        appProperties.setGoogleLoginEnabled(enabled);
+        return ResponseEntity.ok(new AdminSettingsResponse(
+                appProperties.isRegistrationEnabled(),
+                appProperties.isDiscordLoginEnabled(),
+                appProperties.isGoogleLoginEnabled()
+        ));
     }
 }

@@ -4,6 +4,7 @@ import type {
   AdminUser,
   AdminServer,
   AdminAction,
+  AdminSettings,
   PaginatedResponse,
 } from '@/types';
 
@@ -65,4 +66,16 @@ export const adminApi = {
     });
     return api.get<PaginatedResponse<AdminAction>>(`/api/admin/audit-log?${params}`);
   },
+
+  // Settings
+  getSettings: () => api.get<AdminSettings>('/api/admin/settings'),
+
+  setRegistrationEnabled: (enabled: boolean) =>
+    api.put<AdminSettings>(`/api/admin/settings/registration?enabled=${enabled}`),
+
+  setDiscordLoginEnabled: (enabled: boolean) =>
+    api.put<AdminSettings>(`/api/admin/settings/discord-login?enabled=${enabled}`),
+
+  setGoogleLoginEnabled: (enabled: boolean) =>
+    api.put<AdminSettings>(`/api/admin/settings/google-login?enabled=${enabled}`),
 };

@@ -1,11 +1,15 @@
 import { api } from './api';
-import type { AuthUser, LoginCredentials, RegisterCredentials } from '@/types';
+import type { AuthUser, LoginCredentials, RegisterCredentials, RegistrationStatus } from '@/types';
 
 export interface MessageResponse {
   message: string;
 }
 
 export const authApi = {
+  getRegistrationStatus: (): Promise<RegistrationStatus> => {
+    return api.get<RegistrationStatus>('/api/auth/registration-status');
+  },
+
   register: (credentials: RegisterCredentials): Promise<AuthUser> => {
     return api.post<AuthUser>('/api/auth/register', credentials);
   },

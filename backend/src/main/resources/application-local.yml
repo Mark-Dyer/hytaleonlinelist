@@ -83,6 +83,9 @@ app:
   frontend-url: ${FRONTEND_URL:http://localhost:3000}
   cookie-domain: ${COOKIE_DOMAIN:localhost}
   cookie-secure: ${COOKIE_SECURE:false}
+  registration-enabled: false
+  discord-login-enabled: false
+  google-login-enabled: false
 
 server:
   port: 8080

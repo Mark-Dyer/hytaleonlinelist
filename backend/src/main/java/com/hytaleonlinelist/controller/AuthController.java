@@ -1,11 +1,14 @@
 package com.hytaleonlinelist.controller;
 
+import com.hytaleonlinelist.config.AppProperties;
 import com.hytaleonlinelist.dto.request.ForgotPasswordRequest;
 import com.hytaleonlinelist.dto.request.LoginRequest;
 import com.hytaleonlinelist.dto.request.RegisterRequest;
 import com.hytaleonlinelist.dto.request.ResetPasswordRequest;
 import com.hytaleonlinelist.dto.response.AuthResponse;
 import com.hytaleonlinelist.dto.response.MessageResponse;
+import com.hytaleonlinelist.dto.response.RegistrationStatusResponse;
+import com.hytaleonlinelist.exception.BadRequestException;
 import com.hytaleonlinelist.security.UserPrincipal;
 import com.hytaleonlinelist.service.AuthService;
 import jakarta.servlet.http.Cookie;
@@ -23,15 +26,29 @@ import java.util.Arrays;
 public class AuthController {
 
     private final AuthService authService;
+    private final AppProperties appProperties;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, AppProperties appProperties) {
         this.authService = authService;
+        this.appProperties = appProperties;
+    }
+
+    @GetMapping("/registration-status")
+    public ResponseEntity<RegistrationStatusResponse> getRegistrationStatus() {
+        return ResponseEntity.ok(new RegistrationStatusResponse(
+                appProperties.isRegistrationEnabled(),
+                appProperties.isDiscordLoginEnabled(),
+                appProperties.isGoogleLoginEnabled()
+        ));
     }
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(
             @Valid @RequestBody RegisterRequest request,
             HttpServletResponse response) {
+        if (!appProperties.isRegistrationEnabled()) {
+            throw new BadRequestException("Registration is currently disabled");
+        }
         AuthResponse authResponse = authService.register(request, response);
         return ResponseEntity.ok(authResponse);
     }

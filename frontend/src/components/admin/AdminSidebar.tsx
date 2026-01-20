@@ -11,6 +11,7 @@ import {
   ScrollText,
   Shield,
   FileCheck,
+  Settings,
 } from 'lucide-react';
 
 const navItems = [
@@ -42,6 +43,12 @@ const navItems = [
     href: '/admin/audit-log',
     label: 'Audit Log',
     icon: ScrollText,
+    roles: ['ADMIN'],
+  },
+  {
+    href: '/admin/settings',
+    label: 'Settings',
+    icon: Settings,
     roles: ['ADMIN'],
   },
 ];

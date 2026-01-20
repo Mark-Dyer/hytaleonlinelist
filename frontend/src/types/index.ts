@@ -183,3 +183,17 @@ export interface ServerUptimeStats {
   currentlyOnline: boolean;
   lastCheckedAt: string | null;
 }
+
+// Registration status
+export interface RegistrationStatus {
+  registrationEnabled: boolean;
+  discordLoginEnabled: boolean;
+  googleLoginEnabled: boolean;
+}
+
+// Admin settings
+export interface AdminSettings {
+  registrationEnabled: boolean;
+  discordLoginEnabled: boolean;
+  googleLoginEnabled: boolean;
+}

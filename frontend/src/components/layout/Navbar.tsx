@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import {
   Search,
   Menu,
@@ -34,6 +40,7 @@ import {
   Server,
   Loader2,
 } from 'lucide-react';
+import { authApi } from '@/lib/auth-api';
 
 const categories = [
   { name: 'Survival', slug: 'survival', icon: Shield },
@@ -50,6 +57,23 @@ export function Navbar() {
   const { user, isLoading, isAuthenticated, logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [registrationEnabled, setRegistrationEnabled] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    // Only check registration status if user is not authenticated
+    if (!isAuthenticated && !isLoading) {
+      const checkRegistrationStatus = async () => {
+        try {
+          const status = await authApi.getRegistrationStatus();
+          setRegistrationEnabled(status.registrationEnabled);
+        } catch {
+          // If we can't check status, assume it's enabled
+          setRegistrationEnabled(true);
+        }
+      };
+      checkRegistrationStatus();
+    }
+  }, [isAuthenticated, isLoading]);
 
   const handleLogout = async () => {
     await logout();
@@ -213,9 +237,26 @@ export function Navbar() {
                       Sign In
                     </Button>
                   </Link>
-                  <Link href="/register">
-                    <Button size="sm">Register</Button>
-                  </Link>
+                  {registrationEnabled === false ? (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span>
+                            <Button size="sm" disabled>
+                              Register
+                            </Button>
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Registration is currently disabled. Please check back later.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ) : (
+                    <Link href="/register">
+                      <Button size="sm">Register</Button>
+                    </Link>
+                  )}
                 </>
               )}
             </div>
@@ -382,12 +423,29 @@ export function Navbar() {
                             Sign In
                           </Button>
                         </Link>
-                        <Link
-                          href="/register"
-                          onClick={() => setMobileMenuOpen(false)}
-                        >
-                          <Button className="w-full">Register</Button>
-                        </Link>
+                        {registrationEnabled === false ? (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="w-full">
+                                  <Button className="w-full" disabled>
+                                    Register
+                                  </Button>
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Registration is currently disabled. Please check back later.</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        ) : (
+                          <Link
+                            href="/register"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <Button className="w-full">Register</Button>
+                          </Link>
+                        )}
                       </>
                     )}
                   </div>

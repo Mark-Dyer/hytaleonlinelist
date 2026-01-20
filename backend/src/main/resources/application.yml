@@ -85,6 +85,9 @@ app:
   frontend-url: ${FRONTEND_URL:http://localhost:3000}
   cookie-domain: ${COOKIE_DOMAIN:localhost}
   cookie-secure: ${COOKIE_SECURE:false}
+  registration-enabled: ${REGISTRATION_ENABLED:true}
+  discord-login-enabled: ${DISCORD_LOGIN_ENABLED:true}
+  google-login-enabled: ${GOOGLE_LOGIN_ENABLED:true}
 
 # Postmark email configuration (set postmark.enabled=true to use)
 postmark:
