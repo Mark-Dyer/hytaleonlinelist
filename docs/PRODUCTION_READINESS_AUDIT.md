@@ -1,6 +1,7 @@
 # Production Readiness Audit Report: Hytale Online List
 
 **Audit Date:** January 20, 2026
+**Last Updated:** January 21, 2026
 **Auditor:** Production Readiness Assessment
 **Scope:** Full-Stack Application (Frontend + Backend + DevOps)
 
@@ -10,19 +11,29 @@
 
 The Hytale Online List application has a **solid foundation** with well-designed architecture, proper database schema, comprehensive API design, and good documentation. However, several **critical gaps** prevent immediate production deployment.
 
-**Overall Production Readiness: 5.5/10 (NOT READY)**
+**Overall Production Readiness: 6.3/10 (NOT READY)**
 
 ### Critical Blockers
 
-| Issue | Impact |
-|-------|--------|
-| Zero test coverage (both frontend and backend) | Cannot verify code quality |
-| Exposed API credentials in version control | Security breach risk |
-| No CI/CD pipeline | Manual deployments prone to error |
-| No error monitoring/logging infrastructure | Cannot debug production issues |
-| No health check endpoints | Cannot monitor in Kubernetes/Docker |
-| Missing security headers in frontend | XSS/Clickjacking vulnerabilities |
-| No containerization (Docker) | Deployment complexity |
+| Issue | Impact | Status |
+|-------|--------|--------|
+| Zero test coverage (both frontend and backend) | Cannot verify code quality | ❌ Open |
+| Exposed API credentials in version control | Security breach risk | ❌ Open |
+| No CI/CD pipeline | Manual deployments prone to error | ❌ Open |
+| Missing security headers in frontend | XSS/Clickjacking vulnerabilities | ❌ Open |
+| No containerization (Docker) | Deployment complexity | ❌ Open |
+
+### Recently Completed
+
+| Improvement | Date | Impact |
+|-------------|------|--------|
+| Spring Boot Actuator health checks | Jan 21, 2026 | Kubernetes-ready health probes |
+| Custom health indicators (R2, Scheduled Tasks) | Jan 21, 2026 | External service monitoring |
+| Prometheus metrics endpoint | Jan 21, 2026 | Metrics export for monitoring |
+| Structured logging with JSON format | Jan 21, 2026 | Production debugging enabled |
+| Correlation ID tracking | Jan 21, 2026 | Request tracing across services |
+| Comprehensive exception logging | Jan 21, 2026 | 500 errors now logged with stack traces |
+| Request/response logging | Jan 21, 2026 | Performance monitoring, slow request detection |
 
 ---
 
@@ -45,19 +56,19 @@ The Hytale Online List application has a **solid foundation** with well-designed
 
 ### Backend (Spring Boot 4.0.1)
 
-| Category | Score | Status |
-|----------|-------|--------|
-| Error Handling | 8/10 | ✅ Good |
-| Logging | 5/10 | ⚠️ Needs Work |
-| Database | 9/10 | ✅ Excellent |
-| Caching | 2/10 | ❌ Missing |
-| Configuration | 7/10 | ⚠️ Needs Work |
-| Health Checks | 1/10 | ❌ Missing |
-| API Design | 7/10 | ✅ Good |
-| Background Jobs | 8/10 | ✅ Good |
-| Testing | 1/10 | ❌ Missing |
-| Build & Dependencies | 7/10 | ✅ Good |
-| **Backend Total** | **5.5/10** | **PARTIAL** |
+| Category | Score | Status | Changed |
+|----------|-------|--------|---------|
+| Error Handling | 9/10 | ✅ Excellent | ⬆️ +1 |
+| Logging | 9/10 | ✅ Excellent | ⬆️ +4 |
+| Database | 9/10 | ✅ Excellent | |
+| Caching | 2/10 | ❌ Missing | |
+| Configuration | 7/10 | ⚠️ Needs Work | |
+| Health Checks | 9/10 | ✅ Excellent | ⬆️ +8 |
+| API Design | 7/10 | ✅ Good | |
+| Background Jobs | 8/10 | ✅ Good | |
+| Testing | 1/10 | ❌ Missing | |
+| Build & Dependencies | 8/10 | ✅ Good | ⬆️ +1 |
+| **Backend Total** | **6.9/10** | **PARTIAL** | ⬆️ +1.4 |
 
 ### Frontend (Next.js 16.1.1)
 
@@ -91,9 +102,9 @@ The Hytale Online List application has a **solid foundation** with well-designed
 
 ## Backend Assessment
 
-### Error Handling ✅ (8/10)
+### Error Handling ✅ (9/10) - IMPROVED
 
-**Status:** Production-Ready
+**Status:** Production-Ready ✅
 
 **Implementation:**
 - `GlobalExceptionHandler` with comprehensive exception handling
@@ -101,42 +112,67 @@ The Hytale Online List application has a **solid foundation** with well-designed
 - Proper HTTP status codes (400, 401, 403, 404, 409, 500)
 - Field-level validation errors with structured responses
 - Generic 500 error messages (prevents information leakage)
+- ✅ **NEW:** All exceptions logged with appropriate severity levels
+- ✅ **NEW:** 500 errors logged with full stack traces
+- ✅ **NEW:** Correlation ID and path included in all error responses
+- ✅ **NEW:** Spring Security exception handlers (AccessDeniedException, AuthenticationException)
+- ✅ **NEW:** Additional validation handlers (MissingServletRequestParameterException, MethodArgumentTypeMismatchException)
 
-**Gap:** Exception handler doesn't log 500 errors - critical for debugging
-
-```java
-// GlobalExceptionHandler.java - MISSING:
-// logger.error("Unexpected error", ex);
+**Error Response Format:**
+```json
+{
+  "status": 404,
+  "error": "Not Found",
+  "message": "Server not found with slug: example",
+  "timestamp": "2026-01-21T15:30:45.123Z",
+  "path": "/api/servers/example",
+  "correlationId": "abc-123-xyz"
+}
 ```
 
 ---
 
-### Logging ⚠️ (5/10)
+### Logging ✅ (9/10) - IMPROVED
 
-**Status:** Basic Functionality - Needs Enhancement
+**Status:** Production-Ready ✅
 
-**Current Implementation:**
-- SLF4J logging throughout services
-- Appropriate log levels (INFO, WARN, ERROR)
-- Batch operation logging with timing metrics
+**Implementation:**
+- ✅ SLF4J logging throughout services
+- ✅ Appropriate log levels (INFO, WARN, ERROR)
+- ✅ Batch operation logging with timing metrics
+- ✅ **NEW:** `logback-spring.xml` with environment-specific configuration
+- ✅ **NEW:** Structured JSON logging for production (Logstash encoder)
+- ✅ **NEW:** Correlation IDs for request tracing (`X-Correlation-ID` header)
+- ✅ **NEW:** User ID tracking in MDC after authentication
+- ✅ **NEW:** Request/response logging with timing metrics
+- ✅ **NEW:** Log rotation (100MB per file, 30 days retention, 3GB total)
+- ✅ **NEW:** Separate error log file in production
+- ✅ **NEW:** Async file appenders (non-blocking)
+- ✅ **NEW:** Slow request warnings (>5 seconds)
+- ✅ **NEW:** Profile-specific log levels (DEBUG for dev, INFO for prod)
 
-**Missing:**
-- ❌ No `logback.xml` or `log4j2.xml` configuration
-- ❌ No structured logging (JSON format)
-- ❌ No correlation IDs for request tracing
-- ❌ No log rotation configuration
-- ❌ No production-specific log levels
-- ❌ No centralized log aggregation setup
+**New Files Created:**
+- `backend/src/main/resources/logback-spring.xml` - Logging configuration
+- `backend/src/main/java/.../filter/CorrelationIdFilter.java` - Request tracing
+- `backend/src/main/java/.../filter/RequestLoggingFilter.java` - HTTP logging
 
-**Recommendation:** Create `logback-spring.xml`:
-```xml
-<configuration>
-  <springProfile name="prod">
-    <appender name="JSON" class="ch.qos.logback.core.ConsoleAppender">
-      <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
-    </appender>
-  </springProfile>
-</configuration>
+**Example Log Output (Production - JSON):**
+```json
+{
+  "@timestamp": "2026-01-21T15:30:45.123Z",
+  "level": "INFO",
+  "correlationId": "abc-123-xyz",
+  "userId": "user-456",
+  "requestMethod": "GET",
+  "requestUri": "/api/servers",
+  "message": "Request completed: GET /api/servers | Status: 200 | Duration: 111ms",
+  "application": "hytale-online-list"
+}
+```
+
+**Example Log Output (Development - Human-readable):**
+```
+2026-01-21 15:30:45.123 [http-nio-8080-exec-1] [abc-123-xyz] INFO RequestLoggingFilter - Request completed: GET /api/servers | Status: 200 | Duration: 111ms
 ```
 
 ---
@@ -236,36 +272,56 @@ cloudflare:
 
 ---
 
-### Health Checks ❌ (1/10)
+### Health Checks ✅ (9/10) - IMPROVED
 
-**Status:** NOT IMPLEMENTED
+**Status:** Production-Ready ✅
 
-**Missing:**
-- Spring Boot Actuator not in dependencies
-- No `/actuator/health` endpoint
-- No readiness/liveness probes for Kubernetes
-- No dependency health checks (DB, Redis, etc.)
+**Implementation:**
+- ✅ **NEW:** Spring Boot Actuator added to dependencies
+- ✅ **NEW:** `/actuator/health` endpoint configured
+- ✅ **NEW:** `/actuator/health/liveness` - Kubernetes liveness probe
+- ✅ **NEW:** `/actuator/health/readiness` - Kubernetes readiness probe
+- ✅ **NEW:** `/actuator/info` - Application information endpoint
+- ✅ **NEW:** `/actuator/metrics` - Application metrics (secured)
+- ✅ **NEW:** `/actuator/prometheus` - Prometheus metrics export (secured)
+- ✅ **NEW:** Database health check (auto-configured)
+- ✅ **NEW:** Disk space health check
+- ✅ **NEW:** Custom R2 storage health indicator
+- ✅ **NEW:** Custom scheduled tasks health indicator
 
-**Add to pom.xml:**
-```xml
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-actuator</artifactId>
-</dependency>
+**Security:**
+- Health endpoints are public (for load balancers/Kubernetes probes)
+- Detailed health info requires authentication
+- Metrics/Prometheus endpoints require ADMIN role
+
+**Custom Health Indicators:**
+```
+backend/src/main/java/com/hytaleonlinelist/health/
+├── R2StorageHealthIndicator.java      # Cloudflare R2 bucket accessibility
+└── ScheduledTasksHealthIndicator.java # Background job monitoring
 ```
 
-**Configure application.yml:**
-```yaml
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics,prometheus
-  endpoint:
-    health:
-      show-details: when_authorized
-      probes:
-        enabled: true
+**Endpoints:**
+| Endpoint | Access | Purpose |
+|----------|--------|---------|
+| `/actuator/health` | Public | Overall health status |
+| `/actuator/health/liveness` | Public | Kubernetes liveness probe |
+| `/actuator/health/readiness` | Public | Kubernetes readiness probe |
+| `/actuator/info` | Public | Application information |
+| `/actuator/metrics` | ADMIN | Application metrics |
+| `/actuator/prometheus` | ADMIN | Prometheus scraping |
+
+**Example Health Response:**
+```json
+{
+  "status": "UP",
+  "components": {
+    "db": { "status": "UP" },
+    "diskSpace": { "status": "UP" },
+    "r2Storage": { "status": "UP", "details": { "bucket": "hytale-assets" } },
+    "scheduledTasks": { "status": "UP", "details": { "serverPing.status": "OK" } }
+  }
+}
 ```
 
 ---
@@ -377,9 +433,11 @@ management:
 - MapStruct 1.6.3
 - AWS SDK 2.29.50 (for Cloudflare R2)
 
-**Missing:**
-- ❌ Spring Boot Actuator
-- ❌ Micrometer/Prometheus
+**Added:**
+- ✅ **NEW:** Spring Boot Actuator (health, info, metrics)
+- ✅ **NEW:** Micrometer Prometheus Registry (metrics export)
+
+**Still Missing:**
 - ❌ Springdoc OpenAPI
 - ❌ Spring Retry/Resilience4j
 
@@ -718,7 +776,7 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 1. **Rotate Exposed Credentials** - Postmark API token and Cloudflare R2 keys are exposed
 2. **Add Tests** - 0% coverage on both frontend and backend
 3. **Add Error Boundaries** - Frontend crashes show blank pages
-4. **Add Health Checks** - Cannot monitor service health
+4. ~~**Add Health Checks** - Cannot monitor service health~~ ✅ **COMPLETED** (Jan 21, 2026)
 5. **Add Security Headers** - Frontend vulnerable to XSS/clickjacking
 6. **Set Up CI/CD** - Manual deployments are error-prone
 7. **Add Error Monitoring** - Cannot debug production issues
@@ -726,7 +784,7 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 ### High Priority (Should Fix)
 
 8. Add Sentry for error tracking
-9. Add structured logging with correlation IDs
+9. ~~Add structured logging with correlation IDs~~ ✅ **COMPLETED** (Jan 21, 2026)
 10. Add Redis caching layer
 11. Create Docker containers
 12. Add accessibility (ARIA labels, alt text)
@@ -740,7 +798,7 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 17. Add analytics (Google Analytics)
 18. Add PWA support
 19. Add internationalization
-20. Add request tracing (distributed tracing)
+20. ~~Add request tracing (distributed tracing)~~ ✅ **COMPLETED** (Jan 21, 2026) - Correlation IDs implemented
 
 ---
 
@@ -756,8 +814,8 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 | Add integration tests for critical paths | ⬜ |
 | Add error boundaries to frontend | ⬜ |
 | Add security headers middleware | ⬜ |
-| Add Spring Boot Actuator | ⬜ |
-| Configure health check endpoints | ⬜ |
+| Add Spring Boot Actuator | ✅ |
+| Configure health check endpoints | ✅ |
 | Add error monitoring (Sentry) | ⬜ |
 | Create Dockerfiles | ⬜ |
 | Create docker-compose.yml | ⬜ |
@@ -872,8 +930,8 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 
 10. **Day 1-2:** Error handling improvements
     - Add error boundaries to frontend
-    - Add structured logging to backend
-    - Add correlation IDs
+    - ~~Add structured logging to backend~~ ✅ **COMPLETED**
+    - ~~Add correlation IDs~~ ✅ **COMPLETED**
 
 11. **Day 3-4:** Performance optimization
     - Replace `<img>` with Next.js `<Image>`
@@ -911,23 +969,30 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 
 ```
 backend/
-├── pom.xml                                    # Dependencies
+├── pom.xml                                    # Dependencies (+ logstash-logback-encoder)
 ├── src/main/resources/
 │   ├── application.yml                        # Main config
 │   ├── application-local.yml                  # Local config (CONTAINS SECRETS!)
 │   ├── application-oauth.yml                  # OAuth config
+│   ├── logback-spring.xml                     # ✅ NEW: Logging configuration
 │   └── db/migration/                          # Flyway migrations (12 files)
 ├── src/main/java/com/hytaleonlinelist/
 │   ├── config/
 │   │   ├── SecurityConfig.java                # Security configuration
 │   │   └── SchedulingConfig.java              # Scheduling configuration
 │   ├── controller/                            # 13 REST controllers
+│   ├── filter/                                # ✅ NEW: HTTP filters
+│   │   ├── CorrelationIdFilter.java           # ✅ Request tracing
+│   │   └── RequestLoggingFilter.java          # ✅ HTTP logging
+│   ├── health/                                # ✅ NEW: Health indicators
+│   │   ├── R2StorageHealthIndicator.java      # ✅ R2 storage health
+│   │   └── ScheduledTasksHealthIndicator.java # ✅ Background jobs health
 │   ├── service/                               # Business logic
 │   ├── domain/                                # Entities and repositories
 │   ├── dto/                                   # Request/Response DTOs
 │   ├── security/                              # JWT, authentication
 │   └── exception/
-│       └── GlobalExceptionHandler.java        # Error handling
+│       └── GlobalExceptionHandler.java        # Error handling (✅ IMPROVED)
 └── src/test/                                  # EMPTY - No tests
 ```
 
@@ -961,7 +1026,10 @@ frontend/
 
 ```
 backend/
-├── src/main/resources/logback-spring.xml      # MISSING: Logging config
+├── src/main/resources/logback-spring.xml      # ✅ CREATED (Jan 21, 2026)
+├── src/main/java/.../filter/                  # ✅ CREATED (Jan 21, 2026)
+│   ├── CorrelationIdFilter.java               # ✅ Request tracing
+│   └── RequestLoggingFilter.java              # ✅ HTTP logging
 ├── src/test/java/**/*Test.java                # MISSING: Test files
 └── Dockerfile                                 # MISSING: Container
 
@@ -980,5 +1048,22 @@ root/
 
 ---
 
+## Change Log
+
+| Date | Changes | Impact |
+|------|---------|--------|
+| Jan 21, 2026 | Added Spring Boot Actuator with health endpoints | Health Checks: 1/10 → 9/10 |
+| Jan 21, 2026 | Added Prometheus metrics endpoint | Metrics export for monitoring |
+| Jan 21, 2026 | Added custom health indicators (R2, Scheduled Tasks) | External service monitoring |
+| Jan 21, 2026 | Added Micrometer Prometheus registry | Build & Dependencies: 7/10 → 8/10 |
+| Jan 21, 2026 | Added structured logging with JSON format | Logging: 5/10 → 9/10 |
+| Jan 21, 2026 | Added correlation ID tracking | Request tracing enabled |
+| Jan 21, 2026 | Improved GlobalExceptionHandler with logging | Error Handling: 8/10 → 9/10 |
+| Jan 21, 2026 | Added request/response logging filter | Performance monitoring |
+| Jan 20, 2026 | Initial audit report created | Baseline established |
+
+---
+
 **Report Generated:** January 20, 2026
+**Last Updated:** January 21, 2026
 **Next Review Date:** After Phase 1 completion (1 week)

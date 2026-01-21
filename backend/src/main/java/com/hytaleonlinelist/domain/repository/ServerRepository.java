@@ -129,4 +129,10 @@ public interface ServerRepository extends JpaRepository<ServerEntity, UUID>, Jpa
      */
     @Query("SELECT COUNT(s) FROM ServerEntity s WHERE s.verifiedAt IS NOT NULL")
     long countVerifiedServers();
+
+    /**
+     * Get all server slugs (for duplicate checking during import).
+     */
+    @Query("SELECT s.slug FROM ServerEntity s")
+    List<String> findAllSlugs();
 }

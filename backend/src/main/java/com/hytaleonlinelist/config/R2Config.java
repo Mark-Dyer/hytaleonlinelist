@@ -30,7 +30,7 @@ public class R2Config {
         return S3Client.builder()
                 .endpointOverride(URI.create(r2Properties.getEndpoint()))
                 .credentialsProvider(StaticCredentialsProvider.create(credentials))
-                .region(Region.of("auto"))
+                .region(Region.of("weur"))
                 .forcePathStyle(true)
                 .build();
     }

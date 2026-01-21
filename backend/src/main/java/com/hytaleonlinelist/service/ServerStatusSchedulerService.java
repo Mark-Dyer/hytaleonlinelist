@@ -5,6 +5,7 @@ import com.hytaleonlinelist.domain.entity.ServerEntity;
 import com.hytaleonlinelist.domain.entity.ServerStatusHistoryEntity;
 import com.hytaleonlinelist.domain.repository.ServerRepository;
 import com.hytaleonlinelist.domain.repository.ServerStatusHistoryRepository;
+import com.hytaleonlinelist.health.ScheduledTasksHealthIndicator;
 import com.hytaleonlinelist.service.query.QueryResult;
 import com.hytaleonlinelist.service.query.ServerQueryService;
 import org.slf4j.Logger;
@@ -36,16 +37,19 @@ public class ServerStatusSchedulerService {
     private final ServerRepository serverRepository;
     private final ServerStatusHistoryRepository historyRepository;
     private final ServerQueryService queryService;
+    private final ScheduledTasksHealthIndicator healthIndicator;
     private final ExecutorService executorService;
 
     public ServerStatusSchedulerService(
         ServerRepository serverRepository,
         ServerStatusHistoryRepository historyRepository,
-        ServerQueryService queryService
+        ServerQueryService queryService,
+        ScheduledTasksHealthIndicator healthIndicator
     ) {
         this.serverRepository = serverRepository;
         this.historyRepository = historyRepository;
         this.queryService = queryService;
+        this.healthIndicator = healthIndicator;
         this.executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
     }
 
@@ -91,6 +95,9 @@ public class ServerStatusSchedulerService {
 
         long elapsed = System.currentTimeMillis() - startTime;
         log.info("Completed server status check batch: {} servers in {}ms", servers.size(), elapsed);
+
+        // Record successful run for health monitoring
+        healthIndicator.recordServerPingRun();
     }
 
     /**
@@ -174,6 +181,9 @@ public class ServerStatusSchedulerService {
         int deleted = historyRepository.deleteOlderThan(cutoff);
         log.info("Cleaned up {} old status history records (older than {} days)",
             deleted, HISTORY_RETENTION_DAYS);
+
+        // Record successful run for health monitoring
+        healthIndicator.recordCleanupRun();
     }
 
     /**
@@ -209,6 +219,9 @@ public class ServerStatusSchedulerService {
         }
 
         log.info("Completed uptime percentage update for {} servers", updatedServers.size());
+
+        // Record successful run for health monitoring
+        healthIndicator.recordUptimeCalculationRun();
     }
 
     /**

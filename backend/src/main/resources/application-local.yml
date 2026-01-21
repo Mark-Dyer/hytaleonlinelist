@@ -97,7 +97,7 @@ server:
 cloudflare:
   r2:
     enabled: true
-    account-id: hytaleonlinelist-dev
+    account-id: 7136cc6c8eefdf157125fc910bec9ffa
     access-key-id: 5745d1ff2d28093b40539418188e2ae6
     secret-access-key: 2a59438b67f6c20cbae304eb466dcf03c31b0239bfa588907d28b02a88a0a0ec
     bucket-name: hytaleonlinelist-dev

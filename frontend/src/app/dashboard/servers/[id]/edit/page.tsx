@@ -434,6 +434,7 @@ export default function EditServerPage({ params }: EditServerPageProps) {
                     value={formData.iconUrl}
                     onChange={(url) => handleInputChange('iconUrl', url)}
                     disabled={isLoading}
+                    serverSlug={originalServer?.slug}
                   />
                 </div>
 
@@ -447,6 +448,7 @@ export default function EditServerPage({ params }: EditServerPageProps) {
                     value={formData.bannerUrl}
                     onChange={(url) => handleInputChange('bannerUrl', url)}
                     disabled={isLoading}
+                    serverSlug={originalServer?.slug}
                   />
                 </div>
               </div>

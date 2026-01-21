@@ -105,8 +105,105 @@ server:
   servlet:
     context-path: /
 
+# Logging Configuration
+# =====================
+# Logging is configured via logback-spring.xml with profile-specific settings:
+# - default/local/dev: Console output with human-readable format, DEBUG level for app
+# - staging: JSON format to console + file, DEBUG level for app
+# - prod/production: JSON format to console + file (with rotation), INFO level for app
+#
+# Environment variables:
+# - LOG_PATH: Directory for log files (default: logs)
+# - SPRING_PROFILES_ACTIVE: Active profile for logging configuration
+#
+# Features:
+# - Correlation ID tracking (X-Correlation-ID header)
+# - Structured JSON logging in production
+# - Request/response logging with timing
+# - Separate error log file in production
+# - Log rotation (100MB per file, 30 days retention)
 logging:
   level:
     root: INFO
     com.hytaleonlinelist: INFO
     org.hibernate.SQL: INFO
+
+# ===========================================
+# Spring Boot Actuator Configuration
+# ===========================================
+# Provides health checks, metrics, and application info
+#
+# Endpoints:
+# - /actuator/health          - Application health status
+# - /actuator/health/liveness - Kubernetes liveness probe
+# - /actuator/health/readiness - Kubernetes readiness probe
+# - /actuator/info            - Application information
+# - /actuator/metrics         - Application metrics
+# - /actuator/prometheus      - Prometheus metrics (for scraping)
+#
+# Security:
+# - Health endpoints are public (for load balancers/k8s probes)
+# - Detailed health info requires authentication
+# - Metrics/prometheus endpoints require ADMIN role in production
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when_authorized
+      show-components: when_authorized
+      probes:
+        enabled: true
+      group:
+        liveness:
+          include: livenessState
+        readiness:
+          include: readinessState,db,scheduledTasks
+    info:
+      enabled: true
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  health:
+    db:
+      enabled: true
+    diskspace:
+      enabled: true
+      threshold: 100MB
+    mail:
+      enabled: false
+  info:
+    env:
+      enabled: true
+    build:
+      enabled: true
+    git:
+      enabled: true
+      mode: full
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5, 0.95, 0.99
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+# Application info for /actuator/info endpoint
+info:
+  app:
+    name: ${spring.application.name}
+    description: Backend API for Hytale Online List - Server listing and discovery platform
+    version: 1.0.0-SNAPSHOT
+    java:
+      version: ${java.version}
+  contact:
+    email: support@hytaleonlinelist.com

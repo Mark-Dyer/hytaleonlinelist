@@ -42,16 +42,29 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Auth endpoints are public
+                // ========== Actuator Endpoints ==========
+                // Health endpoints are public (for load balancers, Kubernetes probes)
+                .requestMatchers("/actuator/health/**").permitAll()
+                // Info endpoint is public
+                .requestMatchers("/actuator/info").permitAll()
+                // Metrics and Prometheus require ADMIN role
+                .requestMatchers("/actuator/metrics/**").hasRole("ADMIN")
+                .requestMatchers("/actuator/prometheus").hasRole("ADMIN")
+                // All other actuator endpoints require ADMIN role
+                .requestMatchers("/actuator/**").hasRole("ADMIN")
+
+                // ========== Auth Endpoints ==========
                 .requestMatchers("/api/auth/**").permitAll()
                 // OAuth2 endpoints
                 .requestMatchers("/oauth2/**").permitAll()
-                // Public GET endpoints
+
+                // ========== Public GET Endpoints ==========
                 .requestMatchers(HttpMethod.GET, "/api/servers/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/stats/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
-                // Protected endpoints
+
+                // ========== Protected Endpoints ==========
                 .requestMatchers(HttpMethod.POST, "/api/servers/**").authenticated()
                 .requestMatchers(HttpMethod.PUT, "/api/servers/**").authenticated()
                 .requestMatchers(HttpMethod.DELETE, "/api/servers/**").authenticated()
@@ -60,6 +73,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/reviews/**").authenticated()
                 .requestMatchers(HttpMethod.PUT, "/api/reviews/**").authenticated()
                 .requestMatchers(HttpMethod.DELETE, "/api/reviews/**").authenticated()
+
                 // Everything else requires authentication
                 .anyRequest().authenticated()
             )

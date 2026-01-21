@@ -19,7 +19,8 @@ import { dashboardApi, type CreateServerRequest } from '@/lib/dashboard-api';
 import { categoryApi } from '@/lib/server-api';
 import { ApiError } from '@/lib/api';
 import type { Category } from '@/types';
-import { ImageUpload } from '@/components/ui/image-upload';
+import { DeferredImageUpload } from '@/components/ui/image-upload';
+import { uploadApi, generateSlugFromName } from '@/lib/upload-api';
 import {
   ArrowLeft,
   Server,
@@ -36,6 +37,10 @@ export default function AddServerPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState('');
+
+  // Deferred file uploads - files are uploaded on form submit
+  const [iconFile, setIconFile] = useState<File | null>(null);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
 
   // Form state
   const [formData, setFormData] = useState<CreateServerRequest>({
@@ -73,7 +78,29 @@ export default function AddServerPage() {
     setError(null);
 
     try {
-      await dashboardApi.createServer(formData);
+      // Generate slug from server name for file naming
+      const serverSlug = generateSlugFromName(formData.name);
+
+      // Upload files if selected (deferred upload)
+      let iconUrl = formData.iconUrl;
+      let bannerUrl = formData.bannerUrl;
+
+      if (iconFile) {
+        const iconResponse = await uploadApi.uploadIcon(iconFile, serverSlug);
+        iconUrl = iconResponse.url;
+      }
+
+      if (bannerFile) {
+        const bannerResponse = await uploadApi.uploadBanner(bannerFile, serverSlug);
+        bannerUrl = bannerResponse.url;
+      }
+
+      // Create server with uploaded URLs
+      await dashboardApi.createServer({
+        ...formData,
+        iconUrl,
+        bannerUrl,
+      });
       router.push('/dashboard');
     } catch (err) {
       if (err instanceof ApiError) {
@@ -358,7 +385,7 @@ export default function AddServerPage() {
             <CardHeader>
               <CardTitle>Media</CardTitle>
               <CardDescription>
-                Upload images for your server
+                Upload images for your server (uploaded when you submit)
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -368,10 +395,10 @@ export default function AddServerPage() {
                   <p className="mb-3 text-xs text-muted-foreground">
                     Square image, recommended 256x256px
                   </p>
-                  <ImageUpload
+                  <DeferredImageUpload
                     type="icon"
-                    value={formData.iconUrl}
-                    onChange={(url) => handleInputChange('iconUrl', url)}
+                    file={iconFile}
+                    onFileChange={setIconFile}
                     disabled={isLoading}
                   />
                 </div>
@@ -381,10 +408,10 @@ export default function AddServerPage() {
                   <p className="mb-3 text-xs text-muted-foreground">
                     Wide image, recommended 1200x400px
                   </p>
-                  <ImageUpload
+                  <DeferredImageUpload
                     type="banner"
-                    value={formData.bannerUrl}
-                    onChange={(url) => handleInputChange('bannerUrl', url)}
+                    file={bannerFile}
+                    onFileChange={setBannerFile}
                     disabled={isLoading}
                   />
                 </div>

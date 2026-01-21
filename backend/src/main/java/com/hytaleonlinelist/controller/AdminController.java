@@ -6,6 +6,7 @@ import com.hytaleonlinelist.dto.request.ChangeRoleRequest;
 import com.hytaleonlinelist.dto.response.*;
 import com.hytaleonlinelist.security.UserPrincipal;
 import com.hytaleonlinelist.service.AdminService;
+import com.hytaleonlinelist.service.dataimport.DataImportService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,10 +21,15 @@ public class AdminController {
 
     private final AdminService adminService;
     private final AppProperties appProperties;
+    private final DataImportService dataImportService;
 
-    public AdminController(AdminService adminService, AppProperties appProperties) {
+    public AdminController(
+            AdminService adminService,
+            AppProperties appProperties,
+            DataImportService dataImportService) {
         this.adminService = adminService;
         this.appProperties = appProperties;
+        this.dataImportService = dataImportService;
     }
 
     @GetMapping("/stats")
@@ -155,5 +161,19 @@ public class AdminController {
                 appProperties.isDiscordLoginEnabled(),
                 appProperties.isGoogleLoginEnabled()
         ));
+    }
+
+    // Data import endpoints
+
+    /**
+     * Import servers from hytale-servers.com.
+     * This is a one-time operation to seed the database with existing servers.
+     * Only ADMIN role can trigger this import.
+     */
+    @PostMapping("/import/servers")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<DataImportService.ImportResult> importServers() {
+        DataImportService.ImportResult result = dataImportService.importAllServers();
+        return ResponseEntity.ok(result);
     }
 }

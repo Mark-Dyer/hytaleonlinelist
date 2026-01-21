@@ -1,5 +1,6 @@
 package com.hytaleonlinelist.security;
 
+import com.hytaleonlinelist.filter.CorrelationIdFilter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -53,6 +54,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 );
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                // Set user ID in MDC for logging
+                CorrelationIdFilter.setUserId(userId.toString());
             }
         } catch (Exception e) {
             // Log the error but don't stop the filter chain
