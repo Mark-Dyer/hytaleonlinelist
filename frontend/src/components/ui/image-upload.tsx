@@ -155,7 +155,7 @@ export function ImageUpload({
       />
 
       {value ? (
-        <div className="relative inline-block">
+        <div className={cn("relative overflow-hidden", type === 'banner' ? 'w-full' : 'inline-block')}>
           <img
             src={value}
             alt={`Server ${type}`}
@@ -328,7 +328,7 @@ export function DeferredImageUpload({
       />
 
       {previewUrl ? (
-        <div className="relative inline-block">
+        <div className={cn("relative overflow-hidden", type === 'banner' ? 'w-full' : 'inline-block')}>
           <img
             src={previewUrl}
             alt={`Server ${type} preview`}

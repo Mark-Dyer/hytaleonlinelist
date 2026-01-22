@@ -6,6 +6,7 @@ import type {
   AdminAction,
   AdminSettings,
   PaginatedResponse,
+  ImportResult,
 } from '@/types';
 
 export interface BanUserRequest {
@@ -78,4 +79,7 @@ export const adminApi = {
 
   setGoogleLoginEnabled: (enabled: boolean) =>
     api.put<AdminSettings>(`/api/admin/settings/google-login?enabled=${enabled}`),
+
+  // Data Import
+  importServers: () => api.post<ImportResult>('/api/admin/import/servers'),
 };

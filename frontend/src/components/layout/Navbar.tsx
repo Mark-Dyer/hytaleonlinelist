@@ -80,6 +80,21 @@ export function Navbar() {
     router.push('/');
   };
 
+  const handleSearch = () => {
+    const trimmedQuery = searchQuery.trim();
+    if (trimmedQuery) {
+      router.push(`/servers?search=${encodeURIComponent(trimmedQuery)}`);
+      setSearchQuery('');
+      setMobileMenuOpen(false);
+    }
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
   const getUserInitials = (username: string) => {
     return username.slice(0, 2).toUpperCase();
   };
@@ -157,6 +172,7 @@ export function Navbar() {
                 placeholder="Search servers..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
                 className="w-64 pl-9"
               />
             </div>
@@ -278,6 +294,7 @@ export function Navbar() {
                       placeholder="Search servers..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={handleSearchKeyDown}
                       className="pl-9"
                     />
                   </div>

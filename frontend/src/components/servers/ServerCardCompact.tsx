@@ -103,7 +103,7 @@ export function ServerCardCompact({ server }: ServerCardCompactProps) {
     <Card className="group relative overflow-hidden transition-all duration-300 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 !py-0 !gap-0">
       {/* Banner - full bleed, no padding */}
       <Link href={`/server/${server.slug}`} className="block">
-        <div className="relative h-20 bg-gradient-to-br from-secondary to-secondary/50">
+        <div className="relative h-20 overflow-hidden bg-gradient-to-br from-secondary to-secondary/50">
           {server.bannerUrl ? (
             <img
               src={server.bannerUrl}

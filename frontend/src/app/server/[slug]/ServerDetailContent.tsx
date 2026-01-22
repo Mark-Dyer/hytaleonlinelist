@@ -349,7 +349,7 @@ export function ServerDetailContent({ server }: ServerDetailContentProps) {
               </a>
             )}
 
-            {/* Claim Server Button - show if not verified and user is authenticated */}
+            {/* Claim/Verify Server Button - show if not verified and user is authenticated */}
             {!isVerified && isAuthenticated && (
               <Button
                 variant="outline"
@@ -357,7 +357,7 @@ export function ServerDetailContent({ server }: ServerDetailContentProps) {
                 onClick={() => setClaimDialogOpen(true)}
               >
                 <ShieldQuestion className="h-4 w-4" />
-                Claim Server
+                {user?.id === server.owner?.id ? 'Verify Server Ownership' : 'Claim Server'}
               </Button>
             )}
           </div>
@@ -580,6 +580,7 @@ export function ServerDetailContent({ server }: ServerDetailContentProps) {
         open={claimDialogOpen}
         onOpenChange={setClaimDialogOpen}
         onVerificationSuccess={() => setIsVerified(true)}
+        isOwner={user?.id === server.owner?.id}
       />
     </div>
   );

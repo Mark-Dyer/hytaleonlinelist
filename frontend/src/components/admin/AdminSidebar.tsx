@@ -12,6 +12,7 @@ import {
   Shield,
   FileCheck,
   Settings,
+  Database,
 } from 'lucide-react';
 
 const navItems = [
@@ -43,6 +44,12 @@ const navItems = [
     href: '/admin/audit-log',
     label: 'Audit Log',
     icon: ScrollText,
+    roles: ['ADMIN'],
+  },
+  {
+    href: '/admin/import',
+    label: 'Data Import',
+    icon: Database,
     roles: ['ADMIN'],
   },
   {

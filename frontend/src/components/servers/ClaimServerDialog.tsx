@@ -33,6 +33,8 @@ interface ClaimServerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onVerificationSuccess?: () => void;
+  /** Whether the current user is the server owner (changes title from "Claim" to "Verify") */
+  isOwner?: boolean;
 }
 
 type Step = 'select-method' | 'instructions' | 'verifying' | 'success' | 'error';
@@ -50,6 +52,7 @@ export function ClaimServerDialog({
   open,
   onOpenChange,
   onVerificationSuccess,
+  isOwner = false,
 }: ClaimServerDialogProps) {
   const [step, setStep] = useState<Step>('select-method');
   const [methods, setMethods] = useState<VerificationMethodInfo[]>([]);
@@ -339,7 +342,7 @@ export function ClaimServerDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5 text-primary" />
-            {step === 'success' ? 'Server Verified' : 'Claim Server'}
+            {step === 'success' ? 'Server Verified' : isOwner ? 'Verify Server Ownership' : 'Claim Server'}
           </DialogTitle>
         </DialogHeader>
 

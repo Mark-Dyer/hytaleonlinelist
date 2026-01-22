@@ -197,3 +197,12 @@ export interface AdminSettings {
   discordLoginEnabled: boolean;
   googleLoginEnabled: boolean;
 }
+
+// Server import result
+export interface ImportResult {
+  totalFetched: number;
+  imported: number;
+  skipped: number;
+  failed: number;
+  errors: string[];
+}
