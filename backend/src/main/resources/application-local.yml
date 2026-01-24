@@ -43,7 +43,7 @@ spring:
   sql:
     init:
       mode: always
-      data-locations: classpath:db/seed-data-truncate-only.sql
+      data-locations: classpath:db/seed-data.sql
       continue-on-error: true
 
   # Email configuration

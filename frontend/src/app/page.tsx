@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ServerCard, ServerCardCompact } from '@/components/servers';
 import { JsonLd, createItemListSchema } from '@/components/seo/JsonLd';
-import type { Server, Category } from '@/types';
+import type { Server, Category, PlatformStats } from '@/types';
 import {
   Gamepad2,
   Users,
@@ -20,6 +20,8 @@ import {
   TrendingUp,
   Clock,
   Star,
+  ThumbsUp,
+  MessageSquare,
 } from 'lucide-react';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
@@ -84,21 +86,17 @@ async function getNewServers(limit: number): Promise<Server[]> {
   }
 }
 
-async function getStats(): Promise<{ totalPlayers: number; totalServers: number; onlineServers: number }> {
+async function getStats(): Promise<PlatformStats> {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/servers?limit=1000`, {
+    const res = await fetch(`${API_BASE_URL}/api/stats`, {
       next: { revalidate: 60 },
     });
-    if (!res.ok) return { totalPlayers: 0, totalServers: 0, onlineServers: 0 };
-    const data = await res.json();
-    const servers: Server[] = data.data || [];
-    return {
-      totalServers: data.meta?.total || servers.length,
-      totalPlayers: servers.reduce((sum, s) => sum + (s.playerCount ?? 0), 0),
-      onlineServers: servers.filter((s) => s.isOnline).length,
-    };
+    if (!res.ok) {
+      return { totalServers: 0, onlineServers: 0, totalPlayers: 0, totalVotes: 0, totalReviews: 0 };
+    }
+    return res.json();
   } catch {
-    return { totalPlayers: 0, totalServers: 0, onlineServers: 0 };
+    return { totalServers: 0, onlineServers: 0, totalPlayers: 0, totalVotes: 0, totalReviews: 0 };
   }
 }
 
@@ -157,40 +155,64 @@ export default async function HomePage() {
           </div>
 
           {/* Stats */}
-          <div className="mt-16 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className={`mt-16 grid grid-cols-2 gap-4 sm:grid-cols-2 ${stats.totalReviews >= 10 ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
             <Card className="border-primary/20 bg-card/50 backdrop-blur">
-              <CardContent className="flex items-center gap-4 p-6">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                  <Users className="h-6 w-6 text-primary" />
+              <CardContent className="flex items-center gap-3 p-4 sm:p-6">
+                <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg bg-primary/10">
+                  <Users className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{stats.totalPlayers.toLocaleString()}</p>
-                  <p className="text-sm text-muted-foreground">Players Online</p>
+                  <p className="text-xl sm:text-2xl font-bold">{stats.totalPlayers.toLocaleString()}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Players Online</p>
                 </div>
               </CardContent>
             </Card>
             <Card className="border-primary/20 bg-card/50 backdrop-blur">
-              <CardContent className="flex items-center gap-4 p-6">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                  <ServerIcon className="h-6 w-6 text-primary" />
+              <CardContent className="flex items-center gap-3 p-4 sm:p-6">
+                <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg bg-primary/10">
+                  <ServerIcon className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{stats.totalServers}</p>
-                  <p className="text-sm text-muted-foreground">Total Servers</p>
+                  <p className="text-xl sm:text-2xl font-bold">{stats.totalServers.toLocaleString()}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Total Servers</p>
                 </div>
               </CardContent>
             </Card>
             <Card className="border-primary/20 bg-card/50 backdrop-blur">
-              <CardContent className="flex items-center gap-4 p-6">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                  <Wifi className="h-6 w-6 text-primary" />
+              <CardContent className="flex items-center gap-3 p-4 sm:p-6">
+                <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg bg-primary/10">
+                  <Wifi className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{stats.onlineServers}</p>
-                  <p className="text-sm text-muted-foreground">Servers Online</p>
+                  <p className="text-xl sm:text-2xl font-bold">{stats.onlineServers.toLocaleString()}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Servers Online</p>
                 </div>
               </CardContent>
             </Card>
+            <Card className="border-primary/20 bg-card/50 backdrop-blur">
+              <CardContent className="flex items-center gap-3 p-4 sm:p-6">
+                <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg bg-primary/10">
+                  <ThumbsUp className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xl sm:text-2xl font-bold">{stats.totalVotes.toLocaleString()}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Total Votes</p>
+                </div>
+              </CardContent>
+            </Card>
+            {stats.totalReviews >= 10 && (
+              <Card className="border-primary/20 bg-card/50 backdrop-blur col-span-2 lg:col-span-1">
+                <CardContent className="flex items-center gap-3 p-4 sm:p-6">
+                  <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg bg-primary/10">
+                    <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xl sm:text-2xl font-bold">{stats.totalReviews.toLocaleString()}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Total Reviews</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </section>

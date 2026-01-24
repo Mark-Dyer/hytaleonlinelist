@@ -89,21 +89,16 @@ export interface Vote {
   votedAt: string;
 }
 
-export interface ServerStats {
-  playerCount: number | null;
-  isOnline: boolean;
-  recordedAt: string;
+// Platform-wide statistics from /api/stats endpoint
+export interface PlatformStats {
+  totalServers: number;
+  onlineServers: number;
+  totalPlayers: number;
+  totalVotes: number;
+  totalReviews: number;
 }
 
 export type SortOption = 'votes' | 'players' | 'newest' | 'random';
-
-export interface ServerFilters {
-  category?: string;
-  version?: string;
-  online?: boolean;
-  search?: string;
-  sort?: SortOption;
-}
 
 export interface PaginatedResponse<T> {
   data: T[];
