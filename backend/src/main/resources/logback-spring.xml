@@ -107,24 +107,25 @@
         <logger name="org.springframework.security" level="INFO"/>
     </springProfile>
 
-    <!-- ========== Prod Profile: JSON Structured Logging ========== -->
+    <!-- ========== Prod Profile: Human-Readable Logging (temporary) ========== -->
+    <!-- TODO: Switch to JSON_CONSOLE when proper logging platform is implemented -->
     <springProfile name="prod,production">
         <root level="WARN">
-            <appender-ref ref="JSON_CONSOLE"/>
+            <appender-ref ref="CONSOLE"/>
             <appender-ref ref="ASYNC_FILE"/>
             <appender-ref ref="ASYNC_ERROR_FILE"/>
         </root>
 
         <!-- Application logging - INFO level -->
         <logger name="com.hytaleonlinelist" level="INFO" additivity="false">
-            <appender-ref ref="JSON_CONSOLE"/>
+            <appender-ref ref="CONSOLE"/>
             <appender-ref ref="ASYNC_FILE"/>
             <appender-ref ref="ASYNC_ERROR_FILE"/>
         </logger>
 
         <!-- Request logging at INFO level -->
         <logger name="com.hytaleonlinelist.filter.RequestLoggingFilter" level="INFO" additivity="false">
-            <appender-ref ref="JSON_CONSOLE"/>
+            <appender-ref ref="CONSOLE"/>
             <appender-ref ref="ASYNC_FILE"/>
         </logger>
 
