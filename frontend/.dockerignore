@@ -1,0 +1,47 @@
+# Git
+.git
+.gitignore
+
+# Dependencies (installed fresh in Docker)
+node_modules
+
+# Build output (built fresh in Docker)
+.next
+out
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Environment files (secrets - configure via Docker env vars)
+.env
+.env.*
+!.env.example
+!.env.local.example
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage
+.nyc_output
+
+# Documentation
+*.md
+docs/
+
+# Docker files (prevent recursive copies)
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# TypeScript build info
+*.tsbuildinfo
