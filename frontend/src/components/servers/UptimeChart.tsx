@@ -13,6 +13,15 @@ import {
 import { format } from 'date-fns';
 import { StatusHistoryEntry } from '@/types';
 
+// Chart colors - matching the theme (oklch to hex approximations)
+const CHART_COLORS = {
+  primary: '#8B5CF6',      // Purple (primary)
+  primaryLight: '#A78BFA', // Lighter purple for gradient
+  accent: '#22D3EE',       // Cyan (accent)
+  border: '#3F3F5A',       // Border color
+  muted: '#71717A',        // Muted text
+};
+
 interface UptimeChartProps {
   history: StatusHistoryEntry[];
   onRangeChange?: (hours: number) => void;
@@ -92,28 +101,29 @@ export function UptimeChart({ history, onRangeChange }: UptimeChartProps) {
             >
               <defs>
                 <linearGradient id="playerGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                  <stop offset="5%" stopColor={CHART_COLORS.primary} stopOpacity={0.5} />
+                  <stop offset="50%" stopColor={CHART_COLORS.primary} stopOpacity={0.2} />
+                  <stop offset="95%" stopColor={CHART_COLORS.primary} stopOpacity={0.05} />
                 </linearGradient>
               </defs>
               <CartesianGrid
                 strokeDasharray="3 3"
                 vertical={false}
-                stroke="hsl(var(--border))"
+                stroke={CHART_COLORS.border}
               />
               <XAxis
                 dataKey="time"
                 tickFormatter={formatTime}
-                stroke="hsl(var(--muted-foreground))"
-                tick={{ fontSize: 12 }}
+                stroke={CHART_COLORS.muted}
+                tick={{ fontSize: 12, fill: CHART_COLORS.muted }}
                 axisLine={false}
                 tickLine={false}
                 interval="preserveStartEnd"
               />
               <YAxis
                 domain={[0, maxPlayers]}
-                stroke="hsl(var(--muted-foreground))"
-                tick={{ fontSize: 12 }}
+                stroke={CHART_COLORS.muted}
+                tick={{ fontSize: 12, fill: CHART_COLORS.muted }}
                 axisLine={false}
                 tickLine={false}
                 width={30}
@@ -145,8 +155,8 @@ export function UptimeChart({ history, onRangeChange }: UptimeChartProps) {
               <Area
                 type="monotone"
                 dataKey="playerCount"
-                stroke="hsl(var(--primary))"
-                strokeWidth={2}
+                stroke={CHART_COLORS.primary}
+                strokeWidth={2.5}
                 fill="url(#playerGradient)"
                 isAnimationActive={false}
               />
