@@ -1,0 +1,40 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+*.iml
+.vscode
+.settings
+.project
+.classpath
+
+# Build artifacts (we build fresh in Docker)
+target/
+!target/*.jar
+
+# Maven wrapper (not needed, using Alpine Maven)
+.mvn
+mvnw
+mvnw.cmd
+
+# Local configuration (secrets - never include in image)
+src/main/resources/application-local.yml
+src/main/resources/application-oauth.yml
+
+# Logs
+logs/
+*.log
+
+# Tests (not needed at runtime)
+src/test/
+
+# Documentation
+*.md
+docs/
+
+# Docker files (prevent recursive copies)
+Dockerfile*
+docker-compose*
+.dockerignore

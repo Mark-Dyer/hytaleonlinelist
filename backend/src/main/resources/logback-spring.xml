@@ -5,9 +5,6 @@
     <property name="LOG_PATH" value="${LOG_PATH:-logs}"/>
     <property name="APP_NAME" value="hytale-online-list"/>
 
-    <!-- Log format: 'plain' for human-readable, 'json' for structured -->
-    <springProperty scope="context" name="LOG_FORMAT" source="logging.format" defaultValue="plain"/>
-
     <!-- Console appender for development (human-readable) -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
@@ -31,13 +28,11 @@
     <!-- Rolling file appender for production -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_PATH}/${APP_NAME}.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <fileNamePattern>${LOG_PATH}/${APP_NAME}.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
             <maxHistory>30</maxHistory>
             <totalSizeCap>3GB</totalSizeCap>
-            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>100MB</maxFileSize>
-            </timeBasedFileNamingAndTriggeringPolicy>
         </rollingPolicy>
         <encoder class="net.logstash.logback.encoder.LogstashEncoder">
             <includeMdcKeyName>correlationId</includeMdcKeyName>
@@ -56,13 +51,11 @@
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>ERROR</level>
         </filter>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <fileNamePattern>${LOG_PATH}/${APP_NAME}-error.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>50MB</maxFileSize>
             <maxHistory>90</maxHistory>
             <totalSizeCap>1GB</totalSizeCap>
-            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>50MB</maxFileSize>
-            </timeBasedFileNamingAndTriggeringPolicy>
         </rollingPolicy>
         <encoder class="net.logstash.logback.encoder.LogstashEncoder">
             <includeMdcKeyName>correlationId</includeMdcKeyName>
@@ -90,60 +83,56 @@
         <includeCallerData>true</includeCallerData>
     </appender>
 
-    <!-- ========== Plain (Human-Readable) Format ========== -->
-    <if condition='property("LOG_FORMAT").equals("plain")'>
-        <then>
-            <root level="INFO">
-                <appender-ref ref="CONSOLE"/>
-            </root>
+    <!-- ========== Local/Dev Profile: Human-Readable Console ========== -->
+    <springProfile name="local,dev,default">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
 
-            <!-- Application logging -->
-            <logger name="com.hytaleonlinelist" level="DEBUG" additivity="false">
-                <appender-ref ref="CONSOLE"/>
-            </logger>
+        <!-- Application logging -->
+        <logger name="com.hytaleonlinelist" level="DEBUG" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+        </logger>
 
-            <!-- Request logging -->
-            <logger name="com.hytaleonlinelist.filter.RequestLoggingFilter" level="DEBUG" additivity="false">
-                <appender-ref ref="CONSOLE"/>
-            </logger>
+        <!-- Request logging -->
+        <logger name="com.hytaleonlinelist.filter.RequestLoggingFilter" level="DEBUG" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+        </logger>
 
-            <!-- SQL logging for debugging (disabled by default, set to DEBUG to enable) -->
-            <logger name="org.hibernate.SQL" level="INFO"/>
-            <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="INFO"/>
+        <!-- SQL logging for debugging (set to DEBUG to enable) -->
+        <logger name="org.hibernate.SQL" level="INFO"/>
+        <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="INFO"/>
 
-            <!-- Spring Security debugging -->
-            <logger name="org.springframework.security" level="INFO"/>
-        </then>
-    </if>
+        <!-- Spring Security debugging -->
+        <logger name="org.springframework.security" level="INFO"/>
+    </springProfile>
 
-    <!-- ========== JSON (Structured) Format ========== -->
-    <if condition='property("LOG_FORMAT").equals("json")'>
-        <then>
-            <root level="WARN">
-                <appender-ref ref="JSON_CONSOLE"/>
-                <appender-ref ref="ASYNC_FILE"/>
-                <appender-ref ref="ASYNC_ERROR_FILE"/>
-            </root>
+    <!-- ========== Prod Profile: JSON Structured Logging ========== -->
+    <springProfile name="prod,production">
+        <root level="WARN">
+            <appender-ref ref="JSON_CONSOLE"/>
+            <appender-ref ref="ASYNC_FILE"/>
+            <appender-ref ref="ASYNC_ERROR_FILE"/>
+        </root>
 
-            <!-- Application logging - INFO level -->
-            <logger name="com.hytaleonlinelist" level="INFO" additivity="false">
-                <appender-ref ref="JSON_CONSOLE"/>
-                <appender-ref ref="ASYNC_FILE"/>
-                <appender-ref ref="ASYNC_ERROR_FILE"/>
-            </logger>
+        <!-- Application logging - INFO level -->
+        <logger name="com.hytaleonlinelist" level="INFO" additivity="false">
+            <appender-ref ref="JSON_CONSOLE"/>
+            <appender-ref ref="ASYNC_FILE"/>
+            <appender-ref ref="ASYNC_ERROR_FILE"/>
+        </logger>
 
-            <!-- Request logging at INFO level -->
-            <logger name="com.hytaleonlinelist.filter.RequestLoggingFilter" level="INFO" additivity="false">
-                <appender-ref ref="JSON_CONSOLE"/>
-                <appender-ref ref="ASYNC_FILE"/>
-            </logger>
+        <!-- Request logging at INFO level -->
+        <logger name="com.hytaleonlinelist.filter.RequestLoggingFilter" level="INFO" additivity="false">
+            <appender-ref ref="JSON_CONSOLE"/>
+            <appender-ref ref="ASYNC_FILE"/>
+        </logger>
 
-            <!-- Reduce noise from frameworks -->
-            <logger name="org.springframework" level="WARN"/>
-            <logger name="org.hibernate" level="WARN"/>
-            <logger name="com.zaxxer.hikari" level="WARN"/>
-            <logger name="org.flywaydb" level="INFO"/>
-        </then>
-    </if>
+        <!-- Reduce noise from frameworks -->
+        <logger name="org.springframework" level="WARN"/>
+        <logger name="org.hibernate" level="WARN"/>
+        <logger name="com.zaxxer.hikari" level="WARN"/>
+        <logger name="org.flywaydb" level="INFO"/>
+    </springProfile>
 
 </configuration>
