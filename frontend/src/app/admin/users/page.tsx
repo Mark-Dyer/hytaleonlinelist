@@ -46,6 +46,7 @@ import {
   ShieldAlert,
   User,
 } from 'lucide-react';
+import { cfImage } from '@/lib/image';
 
 export default function AdminUsersPage() {
   const { user: currentUser } = useAuth();
@@ -242,7 +243,7 @@ export default function AdminUsersPage() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <Avatar className="h-10 w-10">
-                            <AvatarImage src={user.avatarUrl || undefined} />
+                            <AvatarImage src={cfImage(user.avatarUrl, { width: 40, height: 40 }) || undefined} />
                             <AvatarFallback>
                               {user.username.slice(0, 2).toUpperCase()}
                             </AvatarFallback>

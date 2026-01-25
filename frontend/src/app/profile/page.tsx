@@ -24,6 +24,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { EditProfileDialog } from '@/components/profile/EditProfileDialog';
+import { cfImage, imagePresets } from '@/lib/image';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -115,7 +116,7 @@ export default function ProfilePage() {
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
             {/* Avatar */}
             <Avatar className="h-24 w-24 border-4 border-background shadow-lg">
-              <AvatarImage src={user.avatarUrl || undefined} alt={user.username} />
+              <AvatarImage src={cfImage(user.avatarUrl, imagePresets.avatarLarge) || undefined} alt={user.username} />
               <AvatarFallback className="text-2xl">
                 {getInitials(user.username)}
               </AvatarFallback>
@@ -231,7 +232,7 @@ export default function ProfilePage() {
                       <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-secondary">
                         {vote.serverIconUrl ? (
                           <img
-                            src={vote.serverIconUrl}
+                            src={cfImage(vote.serverIconUrl, { width: 40, height: 40 })}
                             alt={vote.serverName}
                             className="h-full w-full object-cover"
                           />

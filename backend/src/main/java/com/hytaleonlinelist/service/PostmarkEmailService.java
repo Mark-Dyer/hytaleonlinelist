@@ -7,8 +7,6 @@ import com.postmarkapp.postmark.client.exception.PostmarkException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -19,16 +17,12 @@ import java.util.Map;
 
 /**
  * Email service implementation using Postmark Template API.
- * This service is activated when postmark.enabled=true and takes precedence
- * over the default SMTP-based EmailService.
  *
  * Templates must be created in the Postmark dashboard with the following aliases:
  * - welcome-verification: Email verification template
  * - password-reset: Password reset template
  */
 @Service
-@Primary
-@ConditionalOnProperty(name = "postmark.enabled", havingValue = "true")
 public class PostmarkEmailService implements EmailServiceInterface {
 
     private static final Logger logger = LoggerFactory.getLogger(PostmarkEmailService.class);

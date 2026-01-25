@@ -1,8 +1,6 @@
 -- ============================================================================
 -- Hytale Online List - Production Database Initialization Script
 -- ============================================================================
--- This script combines all Flyway migrations (V1-V12) into a single file
--- for initial production database setup.
 --
 -- Usage:
 --   psql -h <host> -U <user> -d <database> -f init-production.sql
@@ -13,8 +11,8 @@
 -- IMPORTANT: This script should only be run on a fresh database.
 --            For existing databases, use Flyway migrations instead.
 --
--- Generated from migrations: V1 through V12
--- Last updated: 2026-01-24
+-- Generated from migrations: V1 through V13
+-- Last updated: 2026-01-25
 -- ============================================================================
 
 -- ============================================================================

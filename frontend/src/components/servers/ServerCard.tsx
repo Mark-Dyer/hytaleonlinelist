@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { Server } from '@/types';
 import { cn } from '@/lib/utils';
+import { cfImage, imagePresets } from '@/lib/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { voteApi } from '@/lib/vote-api';
 import { ApiError } from '@/lib/api';
@@ -113,7 +114,7 @@ export function ServerCard({ server, rank }: ServerCardProps) {
           <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg bg-secondary">
             {server.iconUrl ? (
               <img
-                src={server.iconUrl}
+                src={cfImage(server.iconUrl, imagePresets.iconSmall)}
                 alt={server.name}
                 className="h-full w-full object-cover"
               />
@@ -135,7 +136,7 @@ export function ServerCard({ server, rank }: ServerCardProps) {
           >
             {server.bannerUrl ? (
               <img
-                src={server.bannerUrl}
+                src={cfImage(server.bannerUrl, imagePresets.bannerCard)}
                 alt={`${server.name} banner`}
                 className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
@@ -198,7 +199,7 @@ export function ServerCard({ server, rank }: ServerCardProps) {
             <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-secondary flex-shrink-0">
               {server.iconUrl ? (
                 <img
-                  src={server.iconUrl}
+                  src={cfImage(server.iconUrl, { width: 40, height: 40 })}
                   alt={server.name}
                   className="h-full w-full object-cover"
                 />

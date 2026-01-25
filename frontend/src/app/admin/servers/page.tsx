@@ -40,6 +40,7 @@ import {
   ChevronRight,
   Server,
 } from 'lucide-react';
+import { cfImage } from '@/lib/image';
 
 export default function AdminServersPage() {
   const { user } = useAuth();
@@ -196,7 +197,7 @@ export default function AdminServersPage() {
                         <div className="h-10 w-10 rounded-lg bg-muted overflow-hidden">
                           {server.iconUrl ? (
                             <img
-                              src={server.iconUrl}
+                              src={cfImage(server.iconUrl, { width: 40, height: 40 })}
                               alt={server.name}
                               className="h-full w-full object-cover"
                             />

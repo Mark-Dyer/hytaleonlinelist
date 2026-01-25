@@ -8,9 +8,9 @@ spring:
     default-property-inclusion: always
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/hytale_online_list
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: ${JDBC_DATABASE_URL}
+    username: ${JDBC_DATABASE_USERNAME}
+    password: ${JDBC_DATABASE_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -27,24 +27,6 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         jdbc:
           time_zone: UTC
-
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
-    baseline-on-migrate: true
-
-  # Email configuration
-  mail:
-    host: ${MAIL_HOST:smtp.gmail.com}
-    port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME:}
-    password: ${MAIL_PASSWORD:}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
 
   # OAuth2 configuration
   security:
@@ -89,16 +71,25 @@ app:
   discord-login-enabled: ${DISCORD_LOGIN_ENABLED:true}
   google-login-enabled: ${GOOGLE_LOGIN_ENABLED:true}
 
-# Postmark email configuration (set postmark.enabled=true to use)
+# Postmark email configuration
 postmark:
-  enabled: ${POSTMARK_ENABLED:false}
   api-token: ${POSTMARK_API_TOKEN:}
-  from-email: ${POSTMARK_FROM_EMAIL:noreply@hytaleonlinelist.com}
+  from-email: ${POSTMARK_FROM_EMAIL:hello@hytaleonlinelist.com}
   message-stream: ${POSTMARK_MESSAGE_STREAM:outbound}
   support-email: ${POSTMARK_SUPPORT_EMAIL:support@hytaleonlinelist.com}
   templates:
-    welcome-verification: ${POSTMARK_TEMPLATE_WELCOME:welcome-verification}
+    welcome-verification: ${POSTMARK_TEMPLATE_WELCOME:welcome}
     password-reset: ${POSTMARK_TEMPLATE_PASSWORD_RESET:password-reset}
+
+# Cloudflare R2 Storage
+cloudflare:
+  r2:
+    enabled: ${CLOUDFLARE_R2_ENABLED:false}
+    account-id: ${CLOUDFLARE_R2_ACCOUNT_ID:}
+    access-key-id: ${CLOUDFLARE_R2_ACCESS_KEY_ID:}
+    secret-access-key: ${CLOUDFLARE_R2_SECRET_ACCESS_KEY:}
+    bucket-name: ${CLOUDFLARE_R2_BUCKET_NAME:}
+    public-url: ${CLOUDFLARE_R2_PUBLIC_URL:}
 
 server:
   port: 8080
@@ -107,22 +98,13 @@ server:
 
 # Logging Configuration
 # =====================
-# Logging is configured via logback-spring.xml with profile-specific settings:
-# - default/local/dev: Console output with human-readable format, DEBUG level for app
-# - staging: JSON format to console + file, DEBUG level for app
-# - prod/production: JSON format to console + file (with rotation), INFO level for app
+# logging.format controls log output:
+#   - plain: Human-readable console output (default)
+#   - json:  Structured JSON format with file rotation
 #
-# Environment variables:
-# - LOG_PATH: Directory for log files (default: logs)
-# - SPRING_PROFILES_ACTIVE: Active profile for logging configuration
-#
-# Features:
-# - Correlation ID tracking (X-Correlation-ID header)
-# - Structured JSON logging in production
-# - Request/response logging with timing
-# - Separate error log file in production
-# - Log rotation (100MB per file, 30 days retention)
+# Environment variable: LOG_FORMAT (plain or json)
 logging:
+  format: ${LOG_FORMAT:plain}
   level:
     root: INFO
     com.hytaleonlinelist: INFO
@@ -174,8 +156,6 @@ management:
     diskspace:
       enabled: true
       threshold: 100MB
-    mail:
-      enabled: false
   info:
     env:
       enabled: true

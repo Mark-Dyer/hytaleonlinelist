@@ -41,6 +41,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { authApi } from '@/lib/auth-api';
+import { cfImage, imagePresets } from '@/lib/image';
 
 const categories = [
   { name: 'Survival', slug: 'survival', icon: Shield },
@@ -186,7 +187,7 @@ export function Navbar() {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="gap-2">
                       <Avatar className="h-7 w-7">
-                        <AvatarImage src={user.avatarUrl || undefined} alt={user.username} />
+                        <AvatarImage src={cfImage(user.avatarUrl, { width: 28, height: 28 }) || undefined} alt={user.username} />
                         <AvatarFallback className="text-xs">
                           {getUserInitials(user.username)}
                         </AvatarFallback>
@@ -363,7 +364,7 @@ export function Navbar() {
                       <>
                         <div className="flex items-center gap-3 px-4 py-2">
                           <Avatar className="h-10 w-10">
-                            <AvatarImage src={user.avatarUrl || undefined} alt={user.username} />
+                            <AvatarImage src={cfImage(user.avatarUrl, { width: 40, height: 40 }) || undefined} alt={user.username} />
                             <AvatarFallback>{getUserInitials(user.username)}</AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">

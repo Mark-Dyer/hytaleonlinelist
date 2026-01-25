@@ -410,7 +410,6 @@ Web:              Spring Web MVC
 Security:         Spring Security
 Data:             Spring Data JPA
 Database:         PostgreSQL 16
-Migrations:       Flyway
 Caching:          Spring Cache + Redis
 Scheduling:       Spring Scheduler (@Scheduled)
 Validation:       Jakarta Validation

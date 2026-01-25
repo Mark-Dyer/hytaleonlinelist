@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { Server } from '@/types';
 import { cn } from '@/lib/utils';
+import { cfImage, imagePresets } from '@/lib/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { voteApi } from '@/lib/vote-api';
 import { ApiError } from '@/lib/api';
@@ -106,7 +107,7 @@ export function ServerCardCompact({ server }: ServerCardCompactProps) {
         <div className="relative h-20 overflow-hidden bg-gradient-to-br from-secondary to-secondary/50">
           {server.bannerUrl ? (
             <img
-              src={server.bannerUrl}
+              src={cfImage(server.bannerUrl, imagePresets.bannerCard)}
               alt={server.name}
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
@@ -127,7 +128,7 @@ export function ServerCardCompact({ server }: ServerCardCompactProps) {
           <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-secondary">
             {server.iconUrl ? (
               <img
-                src={server.iconUrl}
+                src={cfImage(server.iconUrl, { width: 40, height: 40 })}
                 alt={server.name}
                 className="h-full w-full object-cover"
               />

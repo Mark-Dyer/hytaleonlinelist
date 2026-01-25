@@ -5,6 +5,9 @@
     <property name="LOG_PATH" value="${LOG_PATH:-logs}"/>
     <property name="APP_NAME" value="hytale-online-list"/>
 
+    <!-- Log format: 'plain' for human-readable, 'json' for structured -->
+    <springProperty scope="context" name="LOG_FORMAT" source="logging.format" defaultValue="plain"/>
+
     <!-- Console appender for development (human-readable) -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
@@ -87,78 +90,60 @@
         <includeCallerData>true</includeCallerData>
     </appender>
 
-    <!-- ========== Development Profile ========== -->
-    <springProfile name="default,local,dev">
-        <root level="INFO">
-            <appender-ref ref="CONSOLE"/>
-        </root>
+    <!-- ========== Plain (Human-Readable) Format ========== -->
+    <if condition='property("LOG_FORMAT").equals("plain")'>
+        <then>
+            <root level="INFO">
+                <appender-ref ref="CONSOLE"/>
+            </root>
 
-        <!-- Application logging -->
-        <logger name="com.hytaleonlinelist" level="DEBUG" additivity="false">
-            <appender-ref ref="CONSOLE"/>
-        </logger>
+            <!-- Application logging -->
+            <logger name="com.hytaleonlinelist" level="DEBUG" additivity="false">
+                <appender-ref ref="CONSOLE"/>
+            </logger>
 
-        <!-- Request logging -->
-        <logger name="com.hytaleonlinelist.filter.RequestLoggingFilter" level="DEBUG" additivity="false">
-            <appender-ref ref="CONSOLE"/>
-        </logger>
+            <!-- Request logging -->
+            <logger name="com.hytaleonlinelist.filter.RequestLoggingFilter" level="DEBUG" additivity="false">
+                <appender-ref ref="CONSOLE"/>
+            </logger>
 
-        <!-- SQL logging for debugging (disabled by default, set to DEBUG to enable) -->
-        <logger name="org.hibernate.SQL" level="INFO"/>
-        <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="INFO"/>
+            <!-- SQL logging for debugging (disabled by default, set to DEBUG to enable) -->
+            <logger name="org.hibernate.SQL" level="INFO"/>
+            <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="INFO"/>
 
-        <!-- Spring Security debugging -->
-        <logger name="org.springframework.security" level="INFO"/>
-    </springProfile>
+            <!-- Spring Security debugging -->
+            <logger name="org.springframework.security" level="INFO"/>
+        </then>
+    </if>
 
-    <!-- ========== Production Profile ========== -->
-    <springProfile name="prod,production">
-        <root level="WARN">
-            <appender-ref ref="JSON_CONSOLE"/>
-            <appender-ref ref="ASYNC_FILE"/>
-            <appender-ref ref="ASYNC_ERROR_FILE"/>
-        </root>
+    <!-- ========== JSON (Structured) Format ========== -->
+    <if condition='property("LOG_FORMAT").equals("json")'>
+        <then>
+            <root level="WARN">
+                <appender-ref ref="JSON_CONSOLE"/>
+                <appender-ref ref="ASYNC_FILE"/>
+                <appender-ref ref="ASYNC_ERROR_FILE"/>
+            </root>
 
-        <!-- Application logging - INFO level in production -->
-        <logger name="com.hytaleonlinelist" level="INFO" additivity="false">
-            <appender-ref ref="JSON_CONSOLE"/>
-            <appender-ref ref="ASYNC_FILE"/>
-            <appender-ref ref="ASYNC_ERROR_FILE"/>
-        </logger>
+            <!-- Application logging - INFO level -->
+            <logger name="com.hytaleonlinelist" level="INFO" additivity="false">
+                <appender-ref ref="JSON_CONSOLE"/>
+                <appender-ref ref="ASYNC_FILE"/>
+                <appender-ref ref="ASYNC_ERROR_FILE"/>
+            </logger>
 
-        <!-- Request logging at INFO level -->
-        <logger name="com.hytaleonlinelist.filter.RequestLoggingFilter" level="INFO" additivity="false">
-            <appender-ref ref="JSON_CONSOLE"/>
-            <appender-ref ref="ASYNC_FILE"/>
-        </logger>
+            <!-- Request logging at INFO level -->
+            <logger name="com.hytaleonlinelist.filter.RequestLoggingFilter" level="INFO" additivity="false">
+                <appender-ref ref="JSON_CONSOLE"/>
+                <appender-ref ref="ASYNC_FILE"/>
+            </logger>
 
-        <!-- Reduce noise from frameworks -->
-        <logger name="org.springframework" level="WARN"/>
-        <logger name="org.hibernate" level="WARN"/>
-        <logger name="com.zaxxer.hikari" level="WARN"/>
-        <logger name="org.flywaydb" level="INFO"/>
-    </springProfile>
-
-    <!-- ========== Staging Profile ========== -->
-    <springProfile name="staging">
-        <root level="INFO">
-            <appender-ref ref="JSON_CONSOLE"/>
-            <appender-ref ref="ASYNC_FILE"/>
-            <appender-ref ref="ASYNC_ERROR_FILE"/>
-        </root>
-
-        <!-- Application logging - DEBUG level for staging -->
-        <logger name="com.hytaleonlinelist" level="DEBUG" additivity="false">
-            <appender-ref ref="JSON_CONSOLE"/>
-            <appender-ref ref="ASYNC_FILE"/>
-            <appender-ref ref="ASYNC_ERROR_FILE"/>
-        </logger>
-
-        <!-- Request logging -->
-        <logger name="com.hytaleonlinelist.filter.RequestLoggingFilter" level="DEBUG" additivity="false">
-            <appender-ref ref="JSON_CONSOLE"/>
-            <appender-ref ref="ASYNC_FILE"/>
-        </logger>
-    </springProfile>
+            <!-- Reduce noise from frameworks -->
+            <logger name="org.springframework" level="WARN"/>
+            <logger name="org.hibernate" level="WARN"/>
+            <logger name="com.zaxxer.hikari" level="WARN"/>
+            <logger name="org.flywaydb" level="INFO"/>
+        </then>
+    </if>
 
 </configuration>

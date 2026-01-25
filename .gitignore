@@ -28,6 +28,9 @@ target/
 *.log
 hs_err_pid*
 
+# Logs directory
+logs/
+
 # Environment files
 .env
 .env.local
@@ -52,6 +55,7 @@ dist/
 # Test coverage
 coverage/
 
-# Application yml
-/application-local.yml
-/application-oauth.yml
+# Application yml (local dev configs with secrets)
+**/application-local.yml
+**/application-oauth.yml
+**/application-prod.yml

@@ -36,6 +36,7 @@ import {
   ShieldQuestion,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { cfImage, imagePresets } from '@/lib/image';
 import { ServerStatusBadge } from '@/components/servers';
 
 const categoryIcons: Record<string, React.ElementType> = {
@@ -212,7 +213,7 @@ export function ServerDetailContent({ server }: ServerDetailContentProps) {
       <div className="relative h-48 bg-gradient-to-r from-primary/30 to-accent/30 sm:h-64">
         {server.bannerUrl && (
           <img
-            src={server.bannerUrl}
+            src={cfImage(server.bannerUrl, imagePresets.bannerLarge)}
             alt={server.name}
             className="h-full w-full object-cover"
           />
@@ -228,7 +229,7 @@ export function ServerDetailContent({ server }: ServerDetailContentProps) {
             <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-xl border-4 border-background bg-card shadow-lg">
               {server.iconUrl ? (
                 <img
-                  src={server.iconUrl}
+                  src={cfImage(server.iconUrl, { width: 128, height: 128 })}
                   alt={server.name}
                   className="h-full w-full object-cover"
                 />

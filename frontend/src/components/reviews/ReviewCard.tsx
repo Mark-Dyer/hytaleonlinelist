@@ -18,6 +18,7 @@ import {
 import { StarRating } from './StarRating';
 import type { Review } from '@/types';
 import { Pencil, Trash2, Loader2 } from 'lucide-react';
+import { cfImage, imagePresets } from '@/lib/image';
 
 interface ReviewCardProps {
   review: Review;
@@ -63,7 +64,7 @@ export function ReviewCard({ review, onEdit, onDelete }: ReviewCardProps) {
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-3">
               <Avatar className="h-10 w-10">
-                <AvatarImage src={review.user.avatarUrl || undefined} />
+                <AvatarImage src={cfImage(review.user.avatarUrl, { width: 40, height: 40 }) || undefined} />
                 <AvatarFallback>
                   {review.user.username.slice(0, 2).toUpperCase()}
                 </AvatarFallback>

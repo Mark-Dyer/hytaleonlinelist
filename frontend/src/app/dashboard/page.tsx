@@ -34,6 +34,7 @@ import {
   Eye,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { cfImage, imagePresets } from '@/lib/image';
 
 export default function DashboardPage() {
   const { user, resendVerificationEmail } = useAuth();
@@ -255,7 +256,7 @@ export default function DashboardPage() {
                     <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-secondary">
                       {server.iconUrl ? (
                         <img
-                          src={server.iconUrl}
+                          src={cfImage(server.iconUrl, imagePresets.iconMedium)}
                           alt={server.name}
                           className="h-full w-full object-cover"
                         />
