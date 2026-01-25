@@ -1,4 +1,4 @@
--- Users table with all authentication, profile, and moderation fields
+-- Users table with all authentication, profile, moderation, and audit fields
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     username VARCHAR(50) NOT NULL UNIQUE,
@@ -17,6 +17,15 @@ CREATE TABLE users (
     is_banned BOOLEAN NOT NULL DEFAULT FALSE,
     banned_at TIMESTAMP WITH TIME ZONE,
     banned_reason TEXT,
+
+    -- Audit and security fields
+    last_login_at TIMESTAMP WITH TIME ZONE,
+    last_active_at TIMESTAMP WITH TIME ZONE,
+    last_login_ip VARCHAR(45),  -- Supports IPv6
+    failed_login_attempts INTEGER NOT NULL DEFAULT 0,
+    locked_until TIMESTAMP WITH TIME ZONE,
+    last_password_change_at TIMESTAMP WITH TIME ZONE,
+
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );

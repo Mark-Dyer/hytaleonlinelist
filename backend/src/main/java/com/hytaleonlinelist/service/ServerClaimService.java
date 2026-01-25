@@ -13,6 +13,7 @@ import com.hytaleonlinelist.exception.ResourceNotFoundException;
 import com.hytaleonlinelist.exception.BadRequestException;
 import com.hytaleonlinelist.service.verification.ServerVerifier;
 import com.hytaleonlinelist.service.verification.ServerVerifier.VerificationResult;
+import com.hytaleonlinelist.util.RequestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -250,6 +251,7 @@ public class ServerClaimService {
         attempt.setServer(server);
         attempt.setUser(user);
         attempt.setVerificationMethod(method);
+        attempt.setIpAddress(RequestUtils.getClientIpFromContext());
 
         // Perform verification
         VerificationResult result = verifier.verifyWithUser(server, server.getClaimToken(), user);

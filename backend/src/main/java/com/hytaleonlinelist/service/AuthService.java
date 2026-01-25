@@ -15,7 +15,10 @@ import com.hytaleonlinelist.exception.UnauthorizedException;
 import com.hytaleonlinelist.security.CookieUtils;
 import com.hytaleonlinelist.security.JwtTokenProvider;
 import com.hytaleonlinelist.security.UserPrincipal;
+import com.hytaleonlinelist.util.RequestUtils;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,12 +27,19 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 @Service
 public class AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
+
+    // Account lockout configuration
+    private static final int MAX_FAILED_ATTEMPTS = 5;
+    private static final Duration LOCKOUT_DURATION = Duration.ofMinutes(15);
 
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -73,6 +83,7 @@ public class AuthService {
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setRole(Role.USER);
         user.setEmailVerified(false);
+        user.setLastPasswordChangeAt(Instant.now());
 
         // Generate verification token
         String verificationToken = UUID.randomUUID().toString();
@@ -92,21 +103,55 @@ public class AuthService {
 
     @Transactional
     public AuthResponse login(LoginRequest request, HttpServletResponse response) {
+        String clientIp = RequestUtils.getClientIpFromContext();
+
+        // Check if account is locked before attempting authentication
+        UserEntity user = userRepository.findByEmail(request.email()).orElse(null);
+        if (user != null && user.isAccountLocked()) {
+            log.warn("Login attempt for locked account: {} from IP: {}", request.email(), clientIp);
+            throw new UnauthorizedException("Account is temporarily locked. Please try again later.");
+        }
+
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.email(), request.password())
             );
 
             UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
-            UserEntity user = userRepository.findById(principal.id())
+            user = userRepository.findById(principal.id())
                     .orElseThrow(() -> new UnauthorizedException("User not found"));
+
+            // Record successful login
+            user.recordSuccessfulLogin(clientIp);
+            userRepository.save(user);
+
+            log.info("Successful login for user: {} from IP: {}", user.getUsername(), clientIp);
 
             setAuthCookies(user, response);
 
             return toAuthResponse(user);
         } catch (BadCredentialsException e) {
+            // Handle failed login attempt
+            handleFailedLogin(request.email(), clientIp);
             throw new UnauthorizedException("Invalid email or password");
         }
+    }
+
+    private void handleFailedLogin(String email, String clientIp) {
+        userRepository.findByEmail(email).ifPresent(user -> {
+            user.incrementFailedLoginAttempts();
+
+            if (user.getFailedLoginAttempts() >= MAX_FAILED_ATTEMPTS) {
+                user.setLockedUntil(Instant.now().plus(LOCKOUT_DURATION));
+                log.warn("Account locked due to {} failed attempts: {} from IP: {}",
+                        user.getFailedLoginAttempts(), email, clientIp);
+            } else {
+                log.warn("Failed login attempt {} of {} for: {} from IP: {}",
+                        user.getFailedLoginAttempts(), MAX_FAILED_ATTEMPTS, email, clientIp);
+            }
+
+            userRepository.save(user);
+        });
     }
 
     @Transactional
@@ -216,7 +261,12 @@ public class AuthService {
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         user.setPasswordResetToken(null);
         user.setPasswordResetTokenExpiry(null);
+        user.setLastPasswordChangeAt(Instant.now());
+        // Reset any lockout on password change
+        user.resetFailedLoginAttempts();
         userRepository.save(user);
+
+        log.info("Password reset completed for user: {}", user.getUsername());
 
         // Invalidate all refresh tokens for security
         refreshTokenRepository.deleteByUserId(user.getId());

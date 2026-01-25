@@ -1,5 +1,6 @@
 package com.hytaleonlinelist.filter;
 
+import com.hytaleonlinelist.util.RequestUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,7 +43,7 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
             MDC.put(CORRELATION_ID_MDC_KEY, correlationId);
             MDC.put(REQUEST_METHOD_MDC_KEY, request.getMethod());
             MDC.put(REQUEST_URI_MDC_KEY, request.getRequestURI());
-            MDC.put(CLIENT_IP_MDC_KEY, getClientIp(request));
+            MDC.put(CLIENT_IP_MDC_KEY, RequestUtils.getClientIp(request));
 
             // Add to response header for client correlation
             response.setHeader(CORRELATION_ID_HEADER, correlationId);
@@ -83,22 +84,6 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
         }
         // Only allow alphanumeric characters, hyphens, and underscores
         return correlationId.replaceAll("[^a-zA-Z0-9\\-_]", "");
-    }
-
-    private String getClientIp(HttpServletRequest request) {
-        // Check for forwarded IP (behind proxy/load balancer)
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (xForwardedFor != null && !xForwardedFor.isBlank()) {
-            // X-Forwarded-For can contain multiple IPs, take the first one
-            return xForwardedFor.split(",")[0].trim();
-        }
-
-        String xRealIp = request.getHeader("X-Real-IP");
-        if (xRealIp != null && !xRealIp.isBlank()) {
-            return xRealIp.trim();
-        }
-
-        return request.getRemoteAddr();
     }
 
     /**
