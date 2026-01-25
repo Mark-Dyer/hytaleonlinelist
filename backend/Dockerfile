@@ -50,9 +50,9 @@ COPY --from=builder --chown=appuser:appgroup /build/extracted/application/ ./
 # Security: Switch to non-root user
 USER appuser
 
-# Health check endpoint
+# Health check endpoint (use 127.0.0.1 to avoid IPv6 issues)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:8080/actuator/health || exit 1
 
 # Expose port
 EXPOSE 8080
