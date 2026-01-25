@@ -201,3 +201,9 @@ export interface ImportResult {
   failed: number;
   errors: string[];
 }
+
+// View count fix result
+export interface ViewCountFixResult {
+  serversUpdated: number;
+  totalViewsAdded: number;
+}

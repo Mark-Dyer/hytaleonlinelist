@@ -16,7 +16,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import type { ImportResult } from '@/types';
+import type { ImportResult, ViewCountFixResult } from '@/types';
 import {
   Loader2,
   AlertCircle,
@@ -32,15 +32,24 @@ import {
   AlertTriangle,
   Info,
   SkipForward,
+  Eye,
+  Wrench,
 } from 'lucide-react';
 
 type ImportStatus = 'idle' | 'running' | 'complete' | 'error';
+type FixStatus = 'idle' | 'running' | 'complete' | 'error';
 
 export default function AdminImportPage() {
   const [status, setStatus] = useState<ImportStatus>('idle');
   const [result, setResult] = useState<ImportResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  // View count fix state
+  const [fixStatus, setFixStatus] = useState<FixStatus>('idle');
+  const [fixResult, setFixResult] = useState<ViewCountFixResult | null>(null);
+  const [fixError, setFixError] = useState<string | null>(null);
+  const [fixDialogOpen, setFixDialogOpen] = useState(false);
 
   const handleImport = async () => {
     setDialogOpen(false);
@@ -62,13 +71,33 @@ export default function AdminImportPage() {
     }
   };
 
+  const handleFixViewCounts = async () => {
+    setFixDialogOpen(false);
+    setFixStatus('running');
+    setFixError(null);
+    setFixResult(null);
+
+    try {
+      const result = await adminApi.fixViewCounts();
+      setFixResult(result);
+      setFixStatus('complete');
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setFixError(err.message);
+      } else {
+        setFixError('An unexpected error occurred while fixing view counts');
+      }
+      setFixStatus('error');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">Data Import</h1>
+        <h1 className="text-3xl font-bold">Data Management</h1>
         <p className="mt-1 text-muted-foreground">
-          Import server data from external sources to seed the platform
+          Import server data and run data maintenance operations
         </p>
       </div>
 
@@ -337,6 +366,158 @@ export default function AdminImportPage() {
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                   <AlertDialogAction onClick={handleImport}>
                     Yes, Start Import
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* View Count Fix Card */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500/10">
+              <Wrench className="h-5 w-5 text-orange-500" />
+            </div>
+            <div>
+              <CardTitle>Fix View Counts</CardTitle>
+              <CardDescription>
+                Correct view counts for imported servers
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            This tool fixes view counts for servers where the view count is less than or equal to
+            the vote count (which doesn&apos;t make sense since users must view a server to vote).
+            It generates realistic view counts based on typical vote conversion rates (2-10%).
+          </p>
+
+          {/* What it does */}
+          <div className="rounded-lg border border-border p-4">
+            <h4 className="mb-3 font-medium flex items-center gap-2">
+              <Eye className="h-4 w-4 text-primary" />
+              What this fix does
+            </h4>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li className="flex items-start gap-2">
+                <span className="mt-1.5 h-1 w-1 rounded-full bg-primary flex-shrink-0" />
+                Sets view counts to 10-50x the vote count (with randomness)
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-1.5 h-1 w-1 rounded-full bg-primary flex-shrink-0" />
+                Servers with 0 votes get 50-250 random views
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-1.5 h-1 w-1 rounded-full bg-primary flex-shrink-0" />
+                Only affects servers where viewCount ≤ voteCount
+              </li>
+            </ul>
+          </div>
+
+          {/* Status Display */}
+          {fixStatus === 'idle' && (
+            <div className="rounded-lg border border-border p-4 text-center">
+              <Eye className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+              <p className="text-sm text-muted-foreground">
+                Ready to fix view counts. Click the button below to begin.
+              </p>
+            </div>
+          )}
+
+          {fixStatus === 'running' && (
+            <div className="rounded-lg border border-orange-500/50 bg-orange-500/5 p-6 text-center">
+              <Loader2 className="mx-auto h-10 w-10 animate-spin text-orange-500 mb-3" />
+              <p className="font-medium">Fixing View Counts</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Please wait while we update server view counts...
+              </p>
+            </div>
+          )}
+
+          {fixStatus === 'complete' && fixResult && (
+            <div className="rounded-lg border border-green-500/50 bg-green-500/10 p-4">
+              <div className="flex items-center gap-2 text-green-600 dark:text-green-400 mb-3">
+                <CheckCircle2 className="h-5 w-5" />
+                <span className="font-medium">View Counts Fixed Successfully</span>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                <div className="text-center p-3 rounded-lg bg-background/50">
+                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                    {fixResult.serversUpdated}
+                  </div>
+                  <div className="text-xs text-muted-foreground">Servers Updated</div>
+                </div>
+                <div className="text-center p-3 rounded-lg bg-background/50">
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    {fixResult.totalViewsAdded.toLocaleString()}
+                  </div>
+                  <div className="text-xs text-muted-foreground">Views Added</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {fixStatus === 'error' && (
+            <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
+              <div className="flex items-center gap-2 text-destructive mb-2">
+                <XCircle className="h-5 w-5" />
+                <span className="font-medium">Fix Failed</span>
+              </div>
+              <p className="text-sm text-destructive">{fixError}</p>
+            </div>
+          )}
+
+          {/* Action Button */}
+          <div className="flex justify-end pt-2">
+            <AlertDialog open={fixDialogOpen} onOpenChange={setFixDialogOpen}>
+              <AlertDialogTrigger asChild>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  disabled={fixStatus === 'running'}
+                  className="gap-2"
+                >
+                  {fixStatus === 'running' ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Fixing...
+                    </>
+                  ) : fixStatus === 'complete' ? (
+                    <>
+                      <Wrench className="h-4 w-4" />
+                      Run Fix Again
+                    </>
+                  ) : (
+                    <>
+                      <Wrench className="h-4 w-4" />
+                      Fix View Counts
+                    </>
+                  )}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Fix Server View Counts?</AlertDialogTitle>
+                  <AlertDialogDescription className="space-y-2">
+                    <p>
+                      This will update view counts for all servers where the view count is
+                      less than or equal to the vote count.
+                    </p>
+                    <p className="font-medium text-foreground">
+                      Are you sure you want to proceed?
+                    </p>
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleFixViewCounts}>
+                    Yes, Fix View Counts
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>

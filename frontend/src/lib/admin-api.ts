@@ -7,6 +7,7 @@ import type {
   AdminSettings,
   PaginatedResponse,
   ImportResult,
+  ViewCountFixResult,
 } from '@/types';
 
 export interface BanUserRequest {
@@ -82,4 +83,7 @@ export const adminApi = {
 
   // Data Import
   importServers: () => api.post<ImportResult>('/api/admin/import/servers'),
+
+  // Data Fixes
+  fixViewCounts: () => api.post<ViewCountFixResult>('/api/admin/fix/view-counts'),
 };
