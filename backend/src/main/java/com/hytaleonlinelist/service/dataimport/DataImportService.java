@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.client.RestClient;
 
 import java.math.BigDecimal;
@@ -21,6 +21,9 @@ import java.util.*;
  * Service for importing server data from external sources.
  * This is a one-time import utility for seeding the database with servers
  * from hytale-servers.com.
+ *
+ * Note: This service commits each page independently to prevent long-running
+ * transactions that could timeout during large imports.
  */
 @Service
 public class DataImportService {
@@ -34,6 +37,7 @@ public class DataImportService {
     private final CategoryRepository categoryRepository;
     private final RestClient restClient;
     private final FileUploadService fileUploadService; // May be null if R2 is disabled
+    private final TransactionTemplate transactionTemplate;
 
     // Mapping from external tag slugs to our category slugs
     private static final Map<String, String> TAG_TO_CATEGORY_MAP = Map.ofEntries(
@@ -57,10 +61,12 @@ public class DataImportService {
     public DataImportService(
         ServerRepository serverRepository,
         CategoryRepository categoryRepository,
+        TransactionTemplate transactionTemplate,
         @Autowired(required = false) FileUploadService fileUploadService
     ) {
         this.serverRepository = serverRepository;
         this.categoryRepository = categoryRepository;
+        this.transactionTemplate = transactionTemplate;
         this.fileUploadService = fileUploadService;
         this.restClient = RestClient.builder()
             .baseUrl(EXTERNAL_API_URL)
@@ -85,21 +91,33 @@ public class DataImportService {
     ) {}
 
     /**
+     * Result of processing a single page.
+     */
+    private record PageResult(
+        int fetched,
+        int imported,
+        int skipped,
+        int failed,
+        int totalPages,
+        List<String> errors
+    ) {}
+
+    /**
      * Imports all servers from hytale-servers.com.
      * Skips servers that already exist (by slug).
+     * Each page is committed independently to prevent long-running transactions.
      */
-    @Transactional
     public ImportResult importAllServers() {
         log.info("Starting server import from hytale-servers.com");
 
-        // Pre-load all categories
+        // Pre-load all categories (read-only, no transaction needed)
         Map<String, CategoryEntity> categoryMap = loadCategoryMap();
         if (categoryMap.isEmpty()) {
             log.error("No categories found in database. Please run migrations first.");
             return new ImportResult(0, 0, 0, 0, List.of("No categories found in database"));
         }
 
-        // Pre-load existing slugs
+        // Pre-load existing slugs (will be updated as we import)
         Set<String> existingSlugs = new HashSet<>(serverRepository.findAllSlugs());
         log.info("Found {} existing server slugs", existingSlugs.size());
 
@@ -116,6 +134,7 @@ public class DataImportService {
             try {
                 log.info("Fetching page {} of {}", page, totalPages);
 
+                // Fetch data from external API (no transaction needed)
                 ApiResponse response = restClient.get()
                     .uri("?page={page}", page)
                     .retrieve()
@@ -131,44 +150,24 @@ public class DataImportService {
                     totalPages = response.meta().pagination().pageCount();
                 }
 
-                totalFetched += response.data().size();
+                // Process and save this page in its own transaction
+                final int currentPage = page;
+                final int knownTotalPages = totalPages;
+                PageResult pageResult = processAndSavePage(
+                    response.data(),
+                    categoryMap,
+                    existingSlugs,
+                    currentPage
+                );
 
-                // Process each server
-                List<ServerEntity> serversToSave = new ArrayList<>();
+                totalFetched += pageResult.fetched();
+                imported += pageResult.imported();
+                skipped += pageResult.skipped();
+                failed += pageResult.failed();
+                errors.addAll(pageResult.errors());
 
-                for (ServerData serverData : response.data()) {
-                    try {
-                        // Skip if slug already exists
-                        if (existingSlugs.contains(serverData.slug())) {
-                            log.debug("Skipping existing server: {}", serverData.slug());
-                            skipped++;
-                            continue;
-                        }
-
-                        // Map to our entity
-                        ServerEntity server = mapToServerEntity(serverData, categoryMap);
-                        if (server != null) {
-                            serversToSave.add(server);
-                            existingSlugs.add(serverData.slug()); // Track for duplicates within import
-                        } else {
-                            failed++;
-                            errors.add("Failed to map server: " + serverData.name());
-                        }
-                    } catch (Exception e) {
-                        failed++;
-                        String error = String.format("Error processing server '%s': %s",
-                            serverData.name(), e.getMessage());
-                        errors.add(error);
-                        log.warn(error, e);
-                    }
-                }
-
-                // Batch save
-                if (!serversToSave.isEmpty()) {
-                    serverRepository.saveAll(serversToSave);
-                    imported += serversToSave.size();
-                    log.info("Saved {} servers from page {}", serversToSave.size(), page);
-                }
+                log.info("Page {} committed: {} imported, {} skipped, {} failed",
+                    page, pageResult.imported(), pageResult.skipped(), pageResult.failed());
 
                 page++;
 
@@ -187,6 +186,62 @@ public class DataImportService {
             totalFetched, imported, skipped, failed);
 
         return new ImportResult(totalFetched, imported, skipped, failed, errors);
+    }
+
+    /**
+     * Processes a single page of servers and saves them in a separate transaction.
+     * This ensures each page is committed independently, preventing long-running transactions.
+     */
+    private PageResult processAndSavePage(
+        List<ServerData> serverDataList,
+        Map<String, CategoryEntity> categoryMap,
+        Set<String> existingSlugs,
+        int pageNumber
+    ) {
+        return transactionTemplate.execute(status -> {
+            int fetched = serverDataList.size();
+            int imported = 0;
+            int skipped = 0;
+            int failed = 0;
+            List<String> errors = new ArrayList<>();
+            List<ServerEntity> serversToSave = new ArrayList<>();
+
+            for (ServerData serverData : serverDataList) {
+                try {
+                    // Skip if slug already exists
+                    if (existingSlugs.contains(serverData.slug())) {
+                        log.debug("Skipping existing server: {}", serverData.slug());
+                        skipped++;
+                        continue;
+                    }
+
+                    // Map to our entity
+                    ServerEntity server = mapToServerEntity(serverData, categoryMap);
+                    if (server != null) {
+                        serversToSave.add(server);
+                        existingSlugs.add(serverData.slug()); // Track for duplicates within import
+                    } else {
+                        failed++;
+                        errors.add("Failed to map server: " + serverData.name());
+                    }
+                } catch (Exception e) {
+                    failed++;
+                    String error = String.format("Error processing server '%s': %s",
+                        serverData.name(), e.getMessage());
+                    errors.add(error);
+                    log.warn(error, e);
+                }
+            }
+
+            // Batch save for this page
+            if (!serversToSave.isEmpty()) {
+                serverRepository.saveAll(serversToSave);
+                imported = serversToSave.size();
+                log.info("Saved {} servers from page {}", imported, pageNumber);
+            }
+
+            return new PageResult(fetched, imported, skipped, failed, 0, errors);
+        });
     }
 
     /**

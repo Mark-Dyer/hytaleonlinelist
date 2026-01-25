@@ -15,7 +15,10 @@ spring:
     hikari:
       maximum-pool-size: 10
       minimum-idle: 5
-      connection-timeout: 30000
+      connection-timeout: 60000       # 60 seconds to acquire connection
+      idle-timeout: 600000            # 10 minutes idle before removal
+      max-lifetime: 1800000           # 30 minutes max connection lifetime
+      keepalive-time: 300000          # 5 minutes - sends keepalive to prevent timeout
 
   jpa:
     hibernate:
