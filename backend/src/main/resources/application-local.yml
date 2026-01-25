@@ -21,8 +21,6 @@ spring:
     hibernate:
       ddl-auto: validate
     show-sql: false
-    # Required to run SQL init AFTER Flyway migrations
-    defer-datasource-initialization: true
     properties:
       hibernate:
         format_sql: true
@@ -30,15 +28,7 @@ spring:
         jdbc:
           time_zone: UTC
 
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
-    baseline-on-migrate: true
-    # Clean and re-run migrations on startup (use with caution!)
-    # Set to true to reset database schema on every restart
-    clean-disabled: ${FLYWAY_CLEAN_DISABLED:true}
-
-  # SQL Data Initialization (runs AFTER Flyway due to defer-datasource-initialization)
+  # SQL Data Initialization
   # Set mode to 'always' to seed data on startup, 'never' to disable
   sql:
     init:
@@ -46,25 +36,11 @@ spring:
       data-locations: classpath:db/seed-data.sql
       continue-on-error: true
 
-  # Email configuration
-  mail:
-    host: ${MAIL_HOST:smtp.gmail.com}
-    port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME:}
-    password: ${MAIL_PASSWORD:}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-
   # OAuth2 is disabled by default - enable by adding 'oauth' profile
   # Run with: --spring.profiles.active=local,oauth
 
-# Postmark email configuration (set postmark.enabled=true to use)
+# Postmark email configuration
 postmark:
-  enabled: true
   api-token: b5654a44-1fbf-4aac-a12e-c49cb4cf66c9
   from-email: mark@mrsupertips.com
   message-stream: outbound
@@ -104,6 +80,7 @@ cloudflare:
     public-url: https://pub-db04090b56b84d7e8efc17b2ef777656.r2.dev
 
 logging:
+  format: plain
   level:
     root: INFO
     com.hytaleonlinelist: INFO
