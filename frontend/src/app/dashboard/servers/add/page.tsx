@@ -18,6 +18,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { dashboardApi, type CreateServerRequest } from '@/lib/dashboard-api';
 import { categoryApi } from '@/lib/server-api';
 import { ApiError } from '@/lib/api';
+import { trackEvent } from '@/components/analytics';
 import type { Category } from '@/types';
 import { DeferredImageUpload } from '@/components/ui/image-upload';
 import { uploadApi, generateSlugFromName } from '@/lib/upload-api';
@@ -76,6 +77,7 @@ export default function AddServerPage() {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+    trackEvent('server_creation_attempted', { category_id: formData.categoryId });
 
     try {
       // Generate slug from server name for file naming
@@ -101,12 +103,15 @@ export default function AddServerPage() {
         iconUrl,
         bannerUrl,
       });
+      trackEvent('server_creation_success', { category_id: formData.categoryId });
       router.push('/dashboard');
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);
+        trackEvent('server_creation_failed', { error: err.message });
       } else {
         setError('Failed to create server. Please try again.');
+        trackEvent('server_creation_failed', { error: 'unexpected_error' });
       }
     } finally {
       setIsLoading(false);

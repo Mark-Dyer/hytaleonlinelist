@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { adminApi } from '@/lib/admin-api';
 import { ApiError } from '@/lib/api';
+import { trackEvent } from '@/components/analytics';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -101,6 +102,7 @@ export default function AdminUsersPage() {
     try {
       const updated = await adminApi.banUser(banUser.id, { reason: banReason });
       setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+      trackEvent('admin_user_banned', { user_id: banUser.id, username: banUser.username });
       setBanUser(null);
       setBanReason('');
     } catch (err) {
@@ -114,6 +116,7 @@ export default function AdminUsersPage() {
     try {
       const updated = await adminApi.unbanUser(user.id);
       setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+      trackEvent('admin_user_unbanned', { user_id: user.id, username: user.username });
     } catch (err) {
       alert(err instanceof ApiError ? err.message : 'Failed to unban user');
     }
@@ -125,6 +128,7 @@ export default function AdminUsersPage() {
     try {
       const updated = await adminApi.changeRole(roleUser.id, { role: newRole });
       setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+      trackEvent('admin_user_role_changed', { user_id: roleUser.id, username: roleUser.username, new_role: newRole });
       setRoleUser(null);
     } catch (err) {
       alert(err instanceof ApiError ? err.message : 'Failed to change role');

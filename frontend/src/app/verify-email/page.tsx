@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { authApi } from '@/lib/auth-api';
+import { trackEvent } from '@/components/analytics';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
@@ -18,6 +19,7 @@ function VerifyEmailContent() {
     if (!token) {
       setStatus('error');
       setError('Invalid verification link');
+      trackEvent('email_verification_failed', { error: 'invalid_link' });
       return;
     }
 
@@ -25,9 +27,11 @@ function VerifyEmailContent() {
       try {
         await authApi.verifyEmail(token);
         setStatus('success');
+        trackEvent('email_verification_success');
       } catch {
         setStatus('error');
         setError('Verification failed. The link may have expired.');
+        trackEvent('email_verification_failed', { error: 'token_expired_or_invalid' });
       }
     };
 

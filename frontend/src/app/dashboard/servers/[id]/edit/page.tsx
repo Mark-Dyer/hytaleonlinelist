@@ -18,6 +18,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { dashboardApi, type UpdateServerRequest } from '@/lib/dashboard-api';
 import { categoryApi } from '@/lib/server-api';
 import { ApiError } from '@/lib/api';
+import { trackEvent } from '@/components/analytics';
 import type { Category, Server } from '@/types';
 import { ImageUpload } from '@/components/ui/image-upload';
 import {
@@ -107,15 +108,19 @@ export default function EditServerPage({ params }: EditServerPageProps) {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+    trackEvent('server_update_attempted', { server_id: id });
 
     try {
       await dashboardApi.updateServer(id, formData);
+      trackEvent('server_update_success', { server_id: id });
       router.push('/dashboard');
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);
+        trackEvent('server_update_failed', { server_id: id, error: err.message });
       } else {
         setError('Failed to update server. Please try again.');
+        trackEvent('server_update_failed', { server_id: id, error: 'unexpected_error' });
       }
     } finally {
       setIsLoading(false);

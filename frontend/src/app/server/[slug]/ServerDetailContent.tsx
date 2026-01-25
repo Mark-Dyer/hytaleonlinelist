@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
 import { voteApi } from '@/lib/vote-api';
 import { ApiError } from '@/lib/api';
+import { trackEvent } from '@/components/analytics';
 import { ReviewList, StarRating } from '@/components/reviews';
 import { ServerStatusSection, VerifiedBadge, ClaimServerDialog } from '@/components/servers';
 import type { Server } from '@/types';
@@ -81,6 +82,15 @@ export function ServerDetailContent({ server }: ServerDetailContentProps) {
 
   const CategoryIcon = categoryIcons[server.category.slug] || Gamepad2;
 
+  // Track server detail view on mount
+  useEffect(() => {
+    trackEvent('server_detail_view', {
+      server_id: server.id,
+      server_name: server.name,
+      category: server.category.slug,
+    });
+  }, [server.id, server.name, server.category.slug]);
+
   // Check vote status when user is authenticated
   useEffect(() => {
     const checkVoteStatus = async () => {
@@ -105,6 +115,7 @@ export function ServerDetailContent({ server }: ServerDetailContentProps) {
         `${server.ipAddress}${server.port !== 5520 ? `:${server.port}` : ''}`
       );
       setCopied(true);
+      trackEvent('server_ip_copied', { server_id: server.id, server_name: server.name });
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy IP:', err);
@@ -138,6 +149,7 @@ export function ServerDetailContent({ server }: ServerDetailContentProps) {
       setVoteCount((prev) => prev + 1);
       setHasVotedToday(true);
       setVoteSuccess(true);
+      trackEvent('vote_submitted', { server_id: server.id, server_name: server.name });
       setTimeout(() => setVoteSuccess(false), 3000);
     } catch (error) {
       if (error instanceof ApiError) {
@@ -333,7 +345,12 @@ export function ServerDetailContent({ server }: ServerDetailContentProps) {
             </div>
 
             {server.websiteUrl && (
-              <a href={server.websiteUrl} target="_blank" rel="noopener noreferrer">
+              <a
+                href={server.websiteUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => trackEvent('server_website_clicked', { server_id: server.id, server_name: server.name })}
+              >
                 <Button variant="outline" className="gap-2">
                   <Globe className="h-4 w-4" />
                   Website
@@ -342,7 +359,12 @@ export function ServerDetailContent({ server }: ServerDetailContentProps) {
             )}
 
             {server.discordUrl && (
-              <a href={server.discordUrl} target="_blank" rel="noopener noreferrer">
+              <a
+                href={server.discordUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => trackEvent('server_discord_clicked', { server_id: server.id, server_name: server.name })}
+              >
                 <Button variant="outline" className="gap-2">
                   <DiscordIcon className="h-4 w-4" />
                   Discord

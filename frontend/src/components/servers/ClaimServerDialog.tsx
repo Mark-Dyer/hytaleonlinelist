@@ -26,6 +26,7 @@ import {
   type ClaimStatusResponse,
 } from '@/lib/claim-api';
 import { ApiError } from '@/lib/api';
+import { trackEvent } from '@/components/analytics';
 
 interface ClaimServerDialogProps {
   serverId: string;
@@ -103,6 +104,7 @@ export function ClaimServerDialog({
     setSelectedMethod(method);
     setLoading(true);
     setError(null);
+    trackEvent('claim_method_selected', { server_id: serverId, method });
 
     try {
       const response = await claimApi.initiateClaim(serverId, method);
@@ -112,6 +114,7 @@ export function ClaimServerDialog({
       const message = err instanceof ApiError ? err.message : 'Failed to initiate claim';
       setError(message);
       setStep('error');
+      trackEvent('claim_initiation_failed', { server_id: serverId, method, error: message });
     } finally {
       setLoading(false);
     }
@@ -122,20 +125,24 @@ export function ClaimServerDialog({
 
     setStep('verifying');
     setError(null);
+    trackEvent('claim_verification_attempted', { server_id: serverId, method: selectedMethod });
 
     try {
       const result = await claimApi.attemptVerification(serverId, selectedMethod);
       if (result.isVerified) {
         setStep('success');
+        trackEvent('claim_verification_success', { server_id: serverId, method: selectedMethod });
         onVerificationSuccess?.();
       } else {
         setError(result.message);
         setStep('instructions');
+        trackEvent('claim_verification_failed', { server_id: serverId, method: selectedMethod, error: result.message });
       }
     } catch (err) {
       const message = err instanceof ApiError ? err.message : 'Verification failed';
       setError(message);
       setStep('instructions');
+      trackEvent('claim_verification_failed', { server_id: serverId, method: selectedMethod, error: message });
     }
   };
 

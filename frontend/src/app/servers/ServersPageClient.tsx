@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select';
 import { ServerCard } from '@/components/servers';
 import { serverApi, categoryApi } from '@/lib/server-api';
+import { trackEvent } from '@/components/analytics';
 import type { Server, Category, PaginatedResponse } from '@/types';
 import {
   Search,
@@ -100,6 +101,10 @@ export function ServersPageClient({
       if (searchQuery !== initialSearch) {
         setCurrentPage(1);
         setFiltersModified(true);
+        // Track search query when user stops typing
+        if (searchQuery.trim()) {
+          trackEvent('search_query_submitted', { query: searchQuery.trim() });
+        }
       }
     }, 300);
     return () => clearTimeout(timer);
@@ -157,11 +162,13 @@ export function ServersPageClient({
     setOnlineOnly(false);
     setCurrentPage(1);
     setFiltersModified(true);
+    trackEvent('filters_cleared');
   };
 
-  const handleFilterChange = () => {
+  const handleFilterChange = (filterType: string, value: string | boolean) => {
     setCurrentPage(1);
     setFiltersModified(true);
+    trackEvent('filter_applied', { filter_type: filterType, value: String(value) });
   };
 
   const hasActiveFilters = searchQuery || selectedCategory || onlineOnly;
@@ -236,7 +243,7 @@ export function ServersPageClient({
                 {/* Sort */}
                 <div className="mb-6">
                   <label className="mb-2 block text-sm font-medium">Sort By</label>
-                  <Select value={sortBy} onValueChange={(value) => { setSortBy(value); handleFilterChange(); }}>
+                  <Select value={sortBy} onValueChange={(value) => { setSortBy(value); handleFilterChange('sort', value); }}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -256,7 +263,7 @@ export function ServersPageClient({
                     <input
                       type="checkbox"
                       checked={onlineOnly}
-                      onChange={(e) => { setOnlineOnly(e.target.checked); handleFilterChange(); }}
+                      onChange={(e) => { setOnlineOnly(e.target.checked); handleFilterChange('online_only', e.target.checked); }}
                       className="h-4 w-4 rounded border-border"
                     />
                     <span className="text-sm">Online servers only</span>
@@ -271,7 +278,7 @@ export function ServersPageClient({
                       variant={selectedCategory === '' ? 'secondary' : 'ghost'}
                       size="sm"
                       className="w-full justify-start"
-                      onClick={() => { setSelectedCategory(''); handleFilterChange(); }}
+                      onClick={() => { setSelectedCategory(''); handleFilterChange('category', 'all'); }}
                     >
                       All Categories
                     </Button>
@@ -287,7 +294,7 @@ export function ServersPageClient({
                           }
                           size="sm"
                           className="w-full justify-start gap-2"
-                          onClick={() => { setSelectedCategory(category.slug); handleFilterChange(); }}
+                          onClick={() => { setSelectedCategory(category.slug); handleFilterChange('category', category.slug); }}
                         >
                           <Icon className="h-4 w-4" />
                           {category.name}
@@ -336,7 +343,7 @@ export function ServersPageClient({
                       {categories.find((c) => c.slug === selectedCategory)?.name}
                       <X
                         className="h-3 w-3 cursor-pointer"
-                        onClick={() => { setSelectedCategory(''); handleFilterChange(); }}
+                        onClick={() => { setSelectedCategory(''); handleFilterChange('category', 'all'); }}
                       />
                     </Badge>
                   )}
@@ -345,7 +352,7 @@ export function ServersPageClient({
                       Online only
                       <X
                         className="h-3 w-3 cursor-pointer"
-                        onClick={() => { setOnlineOnly(false); handleFilterChange(); }}
+                        onClick={() => { setOnlineOnly(false); handleFilterChange('online_only', false); }}
                       />
                     </Badge>
                   )}

@@ -42,6 +42,7 @@ import {
 } from 'lucide-react';
 import { authApi } from '@/lib/auth-api';
 import { cfImage, imagePresets } from '@/lib/image';
+import { trackEvent } from '@/components/analytics';
 
 const categories = [
   { name: 'Survival', slug: 'survival', icon: Shield },
@@ -77,6 +78,7 @@ export function Navbar() {
   }, [isAuthenticated, isLoading]);
 
   const handleLogout = async () => {
+    trackEvent('user_logout');
     await logout();
     router.push('/');
   };
@@ -84,6 +86,7 @@ export function Navbar() {
   const handleSearch = () => {
     const trimmedQuery = searchQuery.trim();
     if (trimmedQuery) {
+      trackEvent('navbar_search_submitted', { query: trimmedQuery });
       router.push(`/servers?search=${encodeURIComponent(trimmedQuery)}`);
       setSearchQuery('');
       setMobileMenuOpen(false);

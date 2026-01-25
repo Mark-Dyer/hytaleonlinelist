@@ -10,6 +10,7 @@ import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator';
 import { ApiError } from '@/lib/api';
 import { authApi } from '@/lib/auth-api';
+import { trackEvent } from '@/components/analytics';
 import { Gamepad2, Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
@@ -43,15 +44,19 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
     setIsLoading(true);
+    trackEvent('login_attempt', { method: 'email' });
 
     try {
       await login({ email, password });
+      trackEvent('login_success', { method: 'email' });
       router.push('/');
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);
+        trackEvent('login_failure', { method: 'email', error: err.message });
       } else {
         setError('An unexpected error occurred');
+        trackEvent('login_failure', { method: 'email', error: 'unexpected_error' });
       }
     } finally {
       setIsLoading(false);
@@ -59,6 +64,7 @@ export default function LoginPage() {
   };
 
   const handleOAuthLogin = (provider: 'discord' | 'google') => {
+    trackEvent('oauth_login_initiated', { provider });
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     window.location.href = `${apiUrl}/oauth2/authorization/${provider}`;
   };

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { adminApi } from '@/lib/admin-api';
 import { ApiError } from '@/lib/api';
+import { trackEvent } from '@/components/analytics';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { AdminSettings } from '@/types';
@@ -95,35 +96,41 @@ export default function AdminSettingsPage() {
 
   const handleToggleRegistration = () => {
     if (!settings) return;
+    const newValue = !settings.registrationEnabled;
     handleToggle(
       'registration',
-      () => adminApi.setRegistrationEnabled(!settings.registrationEnabled),
-      settings.registrationEnabled
-        ? 'Registration has been disabled'
-        : 'Registration has been enabled'
+      () => adminApi.setRegistrationEnabled(newValue),
+      newValue
+        ? 'Registration has been enabled'
+        : 'Registration has been disabled'
     );
+    trackEvent('admin_setting_changed', { setting: 'registration_enabled', value: newValue });
   };
 
   const handleToggleDiscord = () => {
     if (!settings) return;
+    const newValue = !settings.discordLoginEnabled;
     handleToggle(
       'discord',
-      () => adminApi.setDiscordLoginEnabled(!settings.discordLoginEnabled),
-      settings.discordLoginEnabled
-        ? 'Discord login has been disabled'
-        : 'Discord login has been enabled'
+      () => adminApi.setDiscordLoginEnabled(newValue),
+      newValue
+        ? 'Discord login has been enabled'
+        : 'Discord login has been disabled'
     );
+    trackEvent('admin_setting_changed', { setting: 'discord_login_enabled', value: newValue });
   };
 
   const handleToggleGoogle = () => {
     if (!settings) return;
+    const newValue = !settings.googleLoginEnabled;
     handleToggle(
       'google',
-      () => adminApi.setGoogleLoginEnabled(!settings.googleLoginEnabled),
-      settings.googleLoginEnabled
-        ? 'Google login has been disabled'
-        : 'Google login has been enabled'
+      () => adminApi.setGoogleLoginEnabled(newValue),
+      newValue
+        ? 'Google login has been enabled'
+        : 'Google login has been disabled'
     );
+    trackEvent('admin_setting_changed', { setting: 'google_login_enabled', value: newValue });
   };
 
   if (isLoading) {

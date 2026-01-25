@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { userApi, type UpdateProfileRequest } from '@/lib/user-api';
 import { ApiError } from '@/lib/api';
+import { trackEvent } from '@/components/analytics';
 import type { AuthUser } from '@/types';
 import { Loader2, AlertCircle } from 'lucide-react';
 
@@ -57,14 +58,17 @@ export function EditProfileDialog({
       // Only make request if there are changes
       if (Object.keys(updates).length > 0) {
         await userApi.updateProfile(updates);
+        trackEvent('profile_updated', { fields_changed: Object.keys(updates).join(',') });
       }
 
       onSuccess();
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);
+        trackEvent('profile_update_failed', { error: err.message });
       } else {
         setError('Failed to update profile');
+        trackEvent('profile_update_failed', { error: 'unexpected_error' });
       }
     } finally {
       setIsLoading(false);

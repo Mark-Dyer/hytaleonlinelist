@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { adminApi } from '@/lib/admin-api';
 import { ApiError } from '@/lib/api';
+import { trackEvent } from '@/components/analytics';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -87,6 +88,11 @@ export default function AdminServersPage() {
       setServers((prev) =>
         prev.map((s) => (s.id === updated.id ? updated : s))
       );
+      trackEvent('admin_server_featured', {
+        server_id: server.id,
+        server_name: server.name,
+        is_featured: updated.isFeatured
+      });
     } catch (err) {
       alert(err instanceof ApiError ? err.message : 'Failed to update server');
     }
@@ -98,6 +104,11 @@ export default function AdminServersPage() {
       setServers((prev) =>
         prev.map((s) => (s.id === updated.id ? updated : s))
       );
+      trackEvent('admin_server_verified', {
+        server_id: server.id,
+        server_name: server.name,
+        is_verified: updated.isVerified
+      });
     } catch (err) {
       alert(err instanceof ApiError ? err.message : 'Failed to update server');
     }
@@ -109,6 +120,7 @@ export default function AdminServersPage() {
     try {
       await adminApi.deleteServer(deleteServer.id);
       setServers((prev) => prev.filter((s) => s.id !== deleteServer.id));
+      trackEvent('admin_server_deleted', { server_id: deleteServer.id, server_name: deleteServer.name });
       setDeleteServer(null);
     } catch (err) {
       alert(err instanceof ApiError ? err.message : 'Failed to delete server');

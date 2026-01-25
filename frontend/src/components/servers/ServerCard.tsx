@@ -26,6 +26,7 @@ import { cfImage, imagePresets } from '@/lib/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { voteApi } from '@/lib/vote-api';
 import { ApiError } from '@/lib/api';
+import { trackEvent } from '@/components/analytics';
 
 const categoryIcons: Record<string, React.ElementType> = {
   survival: Shield,
@@ -72,6 +73,7 @@ export function ServerCard({ server, rank }: ServerCardProps) {
       await voteApi.voteForServer(server.id);
       setVoteCount(prev => prev + 1);
       setHasVotedToday(true);
+      trackEvent('server_card_vote', { server_id: server.id, server_name: server.name });
     } catch (error) {
       if (error instanceof ApiError && error.status === 409) {
         setHasVotedToday(true);
@@ -89,6 +91,7 @@ export function ServerCard({ server, rank }: ServerCardProps) {
         `${server.ipAddress}${server.port !== 5520 ? `:${server.port}` : ''}`
       );
       setCopied(true);
+      trackEvent('server_card_ip_copied', { server_id: server.id, server_name: server.name });
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy IP:', err);

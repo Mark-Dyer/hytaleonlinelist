@@ -1,6 +1,9 @@
+'use client';
+
 import Link from 'next/link';
 import { Gamepad2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { trackEvent } from '@/components/analytics';
 
 const categories = [
   { name: 'Survival', slug: 'survival' },
@@ -55,6 +58,7 @@ export function Footer() {
                   <Link
                     href={`/servers/${category.slug}`}
                     className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    onClick={() => trackEvent('footer_link_clicked', { section: 'categories', link: category.slug })}
                   >
                     {category.name}
                   </Link>
@@ -72,6 +76,7 @@ export function Footer() {
                   <Link
                     href={resource.href}
                     className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    onClick={() => trackEvent('footer_link_clicked', { section: 'resources', link: resource.href })}
                   >
                     {resource.name}
                   </Link>
@@ -89,6 +94,7 @@ export function Footer() {
                   <Link
                     href={item.href}
                     className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    onClick={() => trackEvent('footer_link_clicked', { section: 'legal', link: item.href })}
                   >
                     {item.name}
                   </Link>

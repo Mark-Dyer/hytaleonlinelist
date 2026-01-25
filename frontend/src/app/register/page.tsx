@@ -10,6 +10,7 @@ import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator';
 import { ApiError } from '@/lib/api';
 import { authApi } from '@/lib/auth-api';
+import { trackEvent } from '@/components/analytics';
 import { Gamepad2, Loader2, AlertCircle } from 'lucide-react';
 
 export default function RegisterPage() {
@@ -53,24 +54,30 @@ export default function RegisterPage() {
 
     if (password !== confirmPassword) {
       setError('Passwords do not match');
+      trackEvent('registration_validation_error', { error: 'password_mismatch' });
       return;
     }
 
     if (password.length < 8) {
       setError('Password must be at least 8 characters');
+      trackEvent('registration_validation_error', { error: 'password_too_short' });
       return;
     }
 
     setIsLoading(true);
+    trackEvent('registration_attempt', { method: 'email' });
 
     try {
       await register({ username, email, password });
+      trackEvent('registration_success', { method: 'email' });
       router.push('/verify-email-notice');
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);
+        trackEvent('registration_failure', { method: 'email', error: err.message });
       } else {
         setError('An unexpected error occurred');
+        trackEvent('registration_failure', { method: 'email', error: 'unexpected_error' });
       }
     } finally {
       setIsLoading(false);
@@ -78,6 +85,7 @@ export default function RegisterPage() {
   };
 
   const handleOAuthRegister = (provider: 'discord' | 'google') => {
+    trackEvent('oauth_register_initiated', { provider });
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     window.location.href = `${apiUrl}/oauth2/authorization/${provider}`;
   };

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { Navbar, Footer } from '@/components/layout';
 import { JsonLd, createOrganizationSchema, createWebSiteSchema } from '@/components/seo/JsonLd';
+import { UmamiAnalytics } from '@/components/analytics';
 import './globals.css';
 
 const geistSans = Geist({
@@ -71,6 +72,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <UmamiAnalytics />
         <AuthProvider>
           <div className="flex min-h-screen flex-col">
             <Navbar />

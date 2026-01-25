@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StarRating } from './StarRating';
+import { trackEvent } from '@/components/analytics';
 import { Loader2 } from 'lucide-react';
 import type { Review } from '@/types';
 
@@ -45,6 +46,7 @@ export function ReviewForm({
 
     try {
       await onSubmit({ rating, content: content.trim() });
+      trackEvent(isEdit ? 'review_updated' : 'review_submitted', { rating });
       if (!isEdit) {
         setRating(0);
         setContent('');
