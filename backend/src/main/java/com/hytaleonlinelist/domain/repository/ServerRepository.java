@@ -67,6 +67,9 @@ public interface ServerRepository extends JpaRepository<ServerEntity, UUID>, Jpa
     @Query("SELECT COUNT(s) FROM ServerEntity s WHERE s.isOnline = true")
     Long countOnlineServers();
 
+    @Query("SELECT COALESCE(SUM(s.voteCount), 0) FROM ServerEntity s")
+    Long getTotalVoteCount();
+
     boolean existsBySlug(String slug);
 
     List<ServerEntity> findByOwnerId(UUID ownerId);

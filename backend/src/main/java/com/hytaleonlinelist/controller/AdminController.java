@@ -176,4 +176,20 @@ public class AdminController {
         DataImportService.ImportResult result = dataImportService.importAllServers();
         return ResponseEntity.ok(result);
     }
+
+    // Data fix endpoints
+
+    /**
+     * Fix view counts for servers where viewCount <= voteCount.
+     * This is a one-time operation to correct imported data where view counts
+     * were not imported but vote counts were.
+     * Generates realistic view counts based on typical vote conversion rates.
+     * Only ADMIN role can trigger this fix.
+     */
+    @PostMapping("/fix/view-counts")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<AdminService.ViewCountFixResult> fixViewCounts() {
+        AdminService.ViewCountFixResult result = adminService.fixViewCounts();
+        return ResponseEntity.ok(result);
+    }
 }

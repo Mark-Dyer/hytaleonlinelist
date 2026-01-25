@@ -27,14 +27,15 @@ public class StatsService {
         long totalServers = serverRepository.count();
         Long onlineServers = serverRepository.countOnlineServers();
         Long totalPlayers = serverRepository.getTotalOnlinePlayers();
-        long totalVotes = voteRepository.count();
+        // Use vote_count from servers table (includes imported votes)
+        Long totalVotes = serverRepository.getTotalVoteCount();
         long totalReviews = reviewRepository.count();
 
         return new StatsResponse(
                 totalServers,
                 onlineServers != null ? onlineServers : 0L,
                 totalPlayers != null ? totalPlayers : 0L,
-                totalVotes,
+                totalVotes != null ? totalVotes : 0L,
                 totalReviews
         );
     }

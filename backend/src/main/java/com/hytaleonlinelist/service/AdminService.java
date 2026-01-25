@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
 @Service
@@ -250,6 +252,59 @@ public class AdminService {
                         actionPage.getTotalPages()
                 )
         );
+    }
+
+    /**
+     * Result of view count fix operation.
+     */
+    public record ViewCountFixResult(int serversUpdated, long totalViewsAdded) {}
+
+    /**
+     * Fixes view counts for all servers where viewCount <= voteCount.
+     * Generates realistic view counts based on typical vote conversion rates (2-10%).
+     * This means views should be roughly 10-50x the vote count, with some randomness.
+     */
+    @Transactional
+    public ViewCountFixResult fixViewCounts() {
+        List<ServerEntity> allServers = serverRepository.findAll();
+        Random random = new Random();
+
+        int updated = 0;
+        long totalViewsAdded = 0;
+
+        for (ServerEntity server : allServers) {
+            int voteCount = server.getVoteCount();
+            long currentViews = server.getViewCount() != null ? server.getViewCount() : 0L;
+
+            // Only fix if views are less than or equal to votes (which doesn't make sense)
+            if (currentViews <= voteCount && voteCount > 0) {
+                // Typical vote conversion rate is 2-10%, so views = votes / conversion_rate
+                // Using a multiplier between 10x and 50x with some randomness
+                double baseMultiplier = 10 + (random.nextDouble() * 40); // 10-50x
+                double jitter = 0.8 + (random.nextDouble() * 0.4); // 80%-120% variance
+
+                long newViewCount = Math.round(voteCount * baseMultiplier * jitter);
+
+                // Ensure minimum of voteCount + some buffer
+                newViewCount = Math.max(newViewCount, voteCount * 10L);
+
+                totalViewsAdded += (newViewCount - currentViews);
+                server.setViewCount(newViewCount);
+                updated++;
+            } else if (voteCount == 0 && currentViews == 0) {
+                // For servers with no votes, give them a small random view count
+                long randomViews = 50 + random.nextInt(200); // 50-249 views
+                server.setViewCount(randomViews);
+                totalViewsAdded += randomViews;
+                updated++;
+            }
+        }
+
+        if (updated > 0) {
+            serverRepository.saveAll(allServers);
+        }
+
+        return new ViewCountFixResult(updated, totalViewsAdded);
     }
 
     @Transactional
