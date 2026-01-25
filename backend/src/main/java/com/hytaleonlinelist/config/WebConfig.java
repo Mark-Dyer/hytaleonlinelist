@@ -1,19 +1,16 @@
 package com.hytaleonlinelist.config;
 
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+/**
+ * Web MVC configuration.
+ *
+ * Note: CORS is configured in SecurityConfig.java using the FRONTEND_URL environment variable.
+ * Do not add CORS configuration here as it will conflict with Spring Security's CORS handling.
+ */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
-
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/api/**")
-                .allowedOrigins("http://localhost:3000")
-                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-                .allowedHeaders("*")
-                .allowCredentials(true)
-                .maxAge(3600);
-    }
+    // CORS is handled by SecurityConfig.corsConfigurationSource()
+    // which uses the app.frontend-url property from environment variables
 }
