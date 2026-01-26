@@ -16,6 +16,9 @@ RUN apk add --no-cache maven
 # Copy only pom.xml first to leverage Docker layer caching for dependencies
 COPY pom.xml .
 
+# Limit Maven JVM memory to prevent OOM during build
+ENV MAVEN_OPTS="-Xmx512m -Xms256m -XX:+UseSerialGC"
+
 # Download dependencies (cached unless pom.xml changes)
 RUN mvn dependency:go-offline -B
 
@@ -23,7 +26,8 @@ RUN mvn dependency:go-offline -B
 COPY src ./src
 
 # Build the application (skip tests - they should run in CI)
-RUN mvn clean package -DskipTests -B && \
+# -T 1 limits to single thread to reduce memory pressure
+RUN mvn clean package -DskipTests -B -T 1 && \
     # Extract the layered JAR for optimized Docker layers
     java -Djarmode=layertools -jar target/*.jar extract --destination extracted
 
