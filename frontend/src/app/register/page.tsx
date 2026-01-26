@@ -11,7 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { ApiError } from '@/lib/api';
 import { authApi } from '@/lib/auth-api';
 import { trackEvent } from '@/components/analytics';
-import { Gamepad2, Loader2, AlertCircle } from 'lucide-react';
+import { Sword, Loader2, AlertCircle } from 'lucide-react';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -95,7 +95,7 @@ export default function RegisterPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary">
-            <Gamepad2 className="h-6 w-6 text-primary-foreground" />
+            <Sword className="h-6 w-6 text-primary-foreground" />
           </div>
           <h1 className="text-2xl font-bold">Create Account</h1>
           <p className="text-muted-foreground">

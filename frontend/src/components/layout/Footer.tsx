@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Gamepad2 } from 'lucide-react';
+import { Sword } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { trackEvent } from '@/components/analytics';
 
@@ -37,7 +37,7 @@ export function Footer() {
           <div className="space-y-4">
             <Link href="/" className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                <Gamepad2 className="h-5 w-5 text-primary-foreground" />
+                <Sword className="h-5 w-5 text-primary-foreground" />
               </div>
               <span className="text-xl font-bold">
                 Hytale<span className="text-primary">Online</span>

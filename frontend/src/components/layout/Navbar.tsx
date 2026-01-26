@@ -28,6 +28,7 @@ import {
   Shield,
   ShieldAlert,
   Swords,
+  Sword,
   Brush,
   Scroll,
   Gamepad2,
@@ -111,7 +112,7 @@ export function Navbar() {
           <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                <Gamepad2 className="h-5 w-5 text-primary-foreground" />
+                <Sword className="h-5 w-5 text-primary-foreground" />
               </div>
               <span className="text-xl font-bold">
                 Hytale<span className="text-primary">Online</span>
